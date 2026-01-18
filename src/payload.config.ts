@@ -37,7 +37,7 @@ async function getCloudflareCtx() {
 
 const cloudflare = useD1 ? await getCloudflareCtx() : null
 
-const payloadSecret = process.env.PAYLOAD_SECRET || (isProduction ? '' : 'dev-secret')
+const payloadSecret = process.env.PAYLOAD_SECRET || 'build-time-placeholder-secret-key-32chars'
 
 export default buildConfig({
   admin: {
