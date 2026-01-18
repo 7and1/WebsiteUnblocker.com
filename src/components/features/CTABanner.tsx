@@ -1,6 +1,5 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
 import { Shield, X } from 'lucide-react'
 import { siteConfig } from '@/config/site'
 import { cn } from '@/lib/utils'
@@ -30,21 +29,13 @@ export function CTABanner({
 
   if (variant === 'modal') {
     return (
-      <AnimatePresence>
+      <>
         {isOpen && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
           >
             <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-            <motion.div
-              className="relative w-full max-w-md rounded-2xl bg-white p-8"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-            >
+            <div className="relative w-full max-w-md rounded-2xl bg-white p-8 animate-in zoom-in-95 duration-200">
               <button onClick={onClose} className="absolute right-4 top-4">
                 <X className="h-5 w-5" />
               </button>
@@ -58,10 +49,10 @@ export function CTABanner({
               >
                 {buttonText}
               </a>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </>
     )
   }
 

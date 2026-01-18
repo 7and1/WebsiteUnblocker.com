@@ -1,6 +1,5 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
 import { Shield } from 'lucide-react'
 import { DiagnosisInput } from './DiagnosisInput'
 import { DiagnosisResult } from './DiagnosisResult'
@@ -30,20 +29,13 @@ export function DiagnosisTool({ defaultUrl = '' }: { defaultUrl?: string }) {
           </p>
         </div>
 
-        <AnimatePresence mode="wait">
-          {state.result && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="border-t border-slate-200"
-            >
-              <div className="p-6 md:p-8" role="region" aria-live="polite" aria-atomic="true">
-                <DiagnosisResult result={state.result} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {state.result && (
+          <div className="border-t border-slate-200 animate-in slide-in-from-top-2 duration-300">
+            <div className="p-6 md:p-8" role="region" aria-live="polite" aria-atomic="true">
+              <DiagnosisResult result={state.result} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

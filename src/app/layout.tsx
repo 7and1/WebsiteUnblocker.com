@@ -21,10 +21,25 @@ export const metadata: Metadata = {
   },
 }
 
+// Performance: DNS prefetch for external domains
+const PRECONNECT_DOMAINS = [
+  'https://websiteunblocker.com',
+]
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <head>
+        {/* Performance: Preconnect to external domains */}
+        {PRECONNECT_DOMAINS.map((domain) => (
+          <link key={domain} rel="preconnect" href={domain} />
+        ))}
+        {/* Performance: DNS prefetch for potential future requests */}
+        {PRECONNECT_DOMAINS.map((domain) => (
+          <link key={`dns-${domain}`} rel="dns-prefetch" href={domain} />
+        ))}
+      </head>
+      <body className="antialiased">{children}</body>
     </html>
   )
 }

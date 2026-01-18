@@ -1,0 +1,95 @@
+name: Database Backup
+
+on:
+  schedule:
+    # Daily backup at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to backup'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '20'
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+jobs:
+  backup:
+    name: Backup D1 Database
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install wrangler
+        run: npm install -g wrangler
+
+      - name: Export D1 database
+        run: |
+          DATE=$(date +%Y%m%d_%H%M%S)
+          echo "DATE=$DATE" >> $GITHUB_ENV
+
+          wrangler d1 export D1 \
+            --env=production \
+            --remote \
+            --output=backup_$DATE.sql
+
+      - name: Upload to R2
+        run: |
+          wrangler r2 object put \
+            websiteunblocker-media/backups/backup_${{ env.DATE }}.sql \
+            --file=backup_${{ env.DATE }}.sql \
+            --env=production
+
+      - name: Clean old backups (retain 30 days)
+        run: |
+          # Get list of backups older than 30 days
+          CUTOFF_DATE=$(date -d "30 days ago" +%Y%m%d)
+
+          # List and delete old backups
+          BACKUPS=$(wrangler r2 object list websiteunblocker-media/backups --env=production --prefix=backup_ | \
+            jq -r '.objects[].name' | \
+            grep -E 'backup_[0-9]{8}_' || true)
+
+          for backup in $BACKUPS; do
+            BACKUP_DATE=$(echo $backup | grep -oP 'backup_\K[0-9]{8}')
+            if [[ "$BACKUP_DATE" < "$CUTOFF_DATE" ]]; then
+              echo "Deleting old backup: $backup"
+              wrangler r2 object delete websiteunblocker-media/backups/$backup --env=production
+            fi
+          done
+
+      - name: Verify backup
+        run: |
+          # Check if backup exists in R2
+          if wrangler r2 object get \
+            websiteunblocker-media/backups/backup_${{ env.DATE }}.sql \
+            --env=production \
+            --file=/dev/null; then
+            echo "Backup verified successfully"
+          else
+            echo "Backup verification failed"
+            exit 1
+          fi
+
+      - name: Backup summary
+        run: |
+          echo "### Backup Completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** ${{ env.DATE }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Location:** R2://websiteunblocker-media/backups/" >> $GITHUB_STEP_SUMMARY
+          echo "**File:** backup_${{ env.DATE }}.sql" >> $GITHUB_STEP_SUMMARY

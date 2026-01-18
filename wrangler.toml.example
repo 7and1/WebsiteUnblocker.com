@@ -1,0 +1,32 @@
+# Wrangler Configuration Template
+# Copy this file to wrangler.toml and fill in your values
+# DO NOT commit wrangler.toml to git (it's in .gitignore)
+
+name = "websiteunblocker"
+main = ".open-next/worker.js"
+compatibility_date = "2025-01-18"
+compatibility_flags = ["nodejs_compat"]
+
+# Account ID - Use CLOUDFLARE_ACCOUNT_ID environment variable instead
+# account_id = "your-account-id-here"
+
+# Assets binding
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+# D1 Database Binding
+[[d1_databases]]
+binding = "D1"
+database_name = "websiteunblocker-db"
+# database_id = "your-d1-database-id-here"  # Use D1_DATABASE_ID env var in CI/CD
+
+# R2 Storage Binding
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "websiteunblocker-media"
+
+# Environment Variables (set these in Cloudflare dashboard or via wrangler secret)
+[vars]
+NODE_ENV = "production"
+NEXT_PUBLIC_SERVER_URL = "https://websiteunblocker.com"

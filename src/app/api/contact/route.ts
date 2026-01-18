@@ -1,87 +1,89 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
-import { ContactSchema } from '@/lib/validation/contact'
 import { rateLimit, rateLimitHeaders } from '@/lib/api/rateLimit'
-import { getClientIp, getUserAgent } from '@/lib/api/request'
+import { processContactSubmission, type ContactSubmissionData } from '@/services/ContactService'
+import { RateLimitError, ValidationError, BadRequestError } from '@/errors'
+import { generateRequestId, logger } from '@/lib/logger'
 
-// Use nodejs runtime for Payload CMS compatibility
+// Node.js runtime required for Payload CMS
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+/**
+ * POST /api/contact
+ *
+ * Handle contact form submission with spam detection
+ */
 export async function POST(request: Request) {
-  const rate = rateLimit({ request, limit: 5, windowMs: 60_000, keyPrefix: 'contact' })
+  const requestId = generateRequestId()
+
+  logger.info('Contact form submission received', { requestId })
+
+  // Rate limit check (async for KV support)
+  const rate = await rateLimit({ request, limit: 5, windowMs: 60_000, keyPrefix: 'contact' })
+  const baseHeaders = {
+    ...rateLimitHeaders(rate),
+    'X-Request-ID': requestId,
+  }
+
   if (!rate.allowed) {
-    return NextResponse.json(
-      {
-        error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Too many submissions. Please try again later.',
-        },
-      },
-      { status: 429, headers: rateLimitHeaders(rate) }
-    )
+    const error = new RateLimitError('Too many submissions. Please try again later.', rate.retryAfter, {
+      limit: rate.limit,
+      remaining: rate.remaining,
+      reset: rate.reset,
+      requestId,
+    })
+    return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: { ...baseHeaders, ...error.getHeaders() } })
   }
 
-  const payload = await request.json().catch(() => null)
-  const parsed = ContactSchema.safeParse(payload)
-
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request data',
-          details: parsed.error.flatten().fieldErrors,
-        },
-      },
-      { status: 400, headers: rateLimitHeaders(rate) }
-    )
+  // Parse request body safely
+  let data: unknown
+  try {
+    data = await request.json()
+  } catch {
+    const error = new BadRequestError('Invalid JSON in request body', undefined, requestId)
+    return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: baseHeaders })
   }
 
-  const data = parsed.data
-
-  if (data.honeypot) {
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Your message has been sent successfully.',
-      },
-      { headers: rateLimitHeaders(rate) }
-    )
+  // Validate basic structure
+  if (!data || typeof data !== 'object') {
+    const error = new BadRequestError('Invalid request data format', undefined, requestId)
+    return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: baseHeaders })
   }
 
   try {
-    const payloadClient = await getPayload({ config: configPromise })
+    // Use service layer for processing
+    const result = await processContactSubmission(data as ContactSubmissionData, request)
 
-    await payloadClient.create({
-      collection: 'contact-submissions',
-      data: {
-        name: data.name,
-        email: data.email,
-        subject: data.subject,
-        message: data.message,
-        ip: getClientIp(request),
-        userAgent: getUserAgent(request),
-      },
+    logger.info('Contact form submission processed', {
+      requestId,
+      success: result.success,
     })
 
     return NextResponse.json(
       {
-        success: true,
-        message: 'Your message has been sent successfully.',
+        success: result.success,
+        message: result.message,
+        ...(result.id && { id: result.id }),
       },
-      { headers: rateLimitHeaders(rate) }
+      { headers: baseHeaders }
     )
   } catch (error) {
+    // Handle known errors
+    if (error instanceof ValidationError) {
+      return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: baseHeaders })
+    }
+
+    // Handle unexpected errors
+    logger.error('Contact form processing failed', error as Error, { requestId })
     return NextResponse.json(
       {
         error: {
           code: 'INTERNAL_ERROR',
           message: 'Unable to submit your message right now.',
+          requestId,
         },
       },
-      { status: 500, headers: rateLimitHeaders(rate) }
+      { status: 500, headers: baseHeaders }
     )
   }
 }

@@ -4,6 +4,21 @@
 
 ---
 
+## Quick Start
+
+```bash
+# Automated deployment (production)
+./scripts/deploy.sh production
+
+# Automated deployment (staging)
+./scripts/deploy.sh staging
+
+# Skip tests during deployment
+SKIP_TESTS=true ./scripts/deploy.sh production
+```
+
+---
+
 ## 1. Environment Setup
 
 ### 1.1 Required Cloudflare Resources

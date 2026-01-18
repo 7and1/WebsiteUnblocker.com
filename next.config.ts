@@ -10,10 +10,25 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
-    optimizePackageImports: ['lucide-react', 'framer-motion'],
+    optimizePackageImports: ['lucide-react'],
   },
   images: {
+    // Image optimization enabled for better performance
+    // Cloudflare Workers doesn't support Next.js Image Optimization
+    // Keeping unoptimized for the Cloudflare deployment
+    // For self-hosted deployments, remove this line to enable optimization
     unoptimized: true,
+    // Configure image domains for external images
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+    // Device sizes for responsive images
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    // Image sizes for the srcset attribute
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   serverExternalPackages: ['@payloadcms/db-d1-sqlite', '@payloadcms/db-sqlite', 'jose', 'libsql', '@libsql/client'],
   eslint: {

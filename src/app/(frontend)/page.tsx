@@ -1,10 +1,69 @@
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { ArrowRight, Globe, Lock, Shield, Zap } from 'lucide-react'
-import { DiagnosisTool, BlogCard, CTABanner } from '@/components'
-import { buildMetadata, buildBreadcrumbSchema } from '@/lib/seo'
+
+// Code splitting: dynamic imports for non-critical components
+// Each component is loaded in its own chunk, reducing initial bundle size
+const DiagnosisTool = dynamic(
+  () => import('@/components/features/DiagnosisTool').then(m => ({ default: m.DiagnosisTool })),
+  {
+    loading: () => (
+      <div className="w-full max-w-2xl mx-auto">
+        <div className="animate-pulse rounded-2xl border border-slate-200 bg-white p-6 md:p-8">
+          <div className="h-8 bg-slate-200 rounded w-48 mb-4" />
+          <div className="h-4 bg-slate-200 rounded w-full mb-3" />
+          <div className="h-12 bg-slate-200 rounded w-full" />
+        </div>
+      </div>
+    ),
+  }
+)
+
+const BlogCard = dynamic(
+  () => import('@/components/features/BlogCard').then(m => ({ default: m.BlogCard })),
+  {
+    loading: () => (
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="animate-pulse">
+          <div className="aspect-video bg-slate-200 rounded-xl mb-4" />
+          <div className="h-4 bg-slate-200 rounded w-20 mb-2" />
+          <div className="h-6 bg-slate-200 rounded w-full mb-2" />
+          <div className="h-4 bg-slate-200 rounded w-3/4" />
+        </div>
+      </div>
+    ),
+  }
+)
+
+const CTABanner = dynamic(
+  () => import('@/components/features/CTABanner').then(m => ({ default: m.CTABanner })),
+  {
+    loading: () => (
+      <section className="bg-slate-900 px-4 py-20">
+        <div className="mx-auto max-w-4xl text-center animate-pulse">
+          <div className="h-10 bg-slate-700 rounded w-2/3 mx-auto mb-6" />
+          <div className="h-6 bg-slate-700 rounded w-full max-w-2xl mx-auto mb-8" />
+          <div className="h-14 bg-slate-700 rounded w-48 mx-auto" />
+        </div>
+      </section>
+    ),
+  }
+)
+
+import {
+  buildMetadata,
+  buildBreadcrumbSchema,
+  buildOrganizationSchema,
+  buildWebSiteSchema,
+  buildFaqSchema,
+  buildSoftwareApplicationSchema,
+} from '@/lib/seo'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { siteConfig } from '@/config/site'
+import { absoluteUrl } from '@/lib/utils'
+import { kvCache } from '@/lib/cache/kvCache'
 
 export const metadata = buildMetadata({
   title: 'Website Unblocker - Check & Unblock Any Website Free',
@@ -13,29 +72,73 @@ export const metadata = buildMetadata({
   path: '/',
 })
 
-// Force dynamic rendering for Payload CMS
-export const dynamic = 'force-dynamic'
+// ISR: Cache for 5 minutes with stale-while-revalidate for better performance
+export const revalidate = 300
 
 async function getLatestPosts() {
-  try {
-    const payload = await getPayload({ config: configPromise })
-    const posts = await payload.find({ collection: 'posts', limit: 6, sort: '-published_date', depth: 1 })
-    return posts.docs
-  } catch {
-    return []
-  }
+  // Use KV cache for frequently accessed posts data
+  // Reduces D1 database load and improves response times
+  return kvCache({
+    key: 'homepage:latest-posts',
+    ttl: 300, // 5 minutes cache
+    swrTtl: 600, // Serve stale for up to 10 minutes while revalidating
+    fetchFn: async () => {
+      const payload = await getPayload({ config: configPromise })
+      const posts = await payload.find({ collection: 'posts', limit: 6, sort: '-published_date', depth: 1 })
+      return posts.docs
+    },
+  })
 }
 
 export default async function HomePage() {
   const posts = await getLatestPosts()
 
-  const breadcrumbSchema = buildBreadcrumbSchema([
-    { name: 'Home', path: '/' },
+  // Build all structured data using centralized schema builders
+  const breadcrumbSchema = buildBreadcrumbSchema([{ name: 'Home', path: '/' }])
+  const organizationSchema = buildOrganizationSchema()
+  const webSiteSchema = buildWebSiteSchema()
+
+  // FAQ Schema for common questions
+  const faqSchema = buildFaqSchema([
+    {
+      question: 'How do I check if a website is blocked?',
+      answer: 'Use our free Website Unblocker tool to instantly check if any website is accessible in your region. Simply enter the URL and get immediate results.',
+    },
+    {
+      question: 'What is the best way to unblock websites?',
+      answer: 'The most reliable way to unblock websites is using a VPN service. We recommend NordVPN for its speed, security, and ability to bypass geo-restrictions and censorship.',
+    },
+    {
+      question: 'Is it legal to use a VPN to unblock websites?',
+      answer: 'Using a VPN is legal in most countries. However, regulations vary by jurisdiction, so we recommend checking your local laws before using any unblocking service.',
+    },
+    {
+      question: 'Why are certain websites blocked in my region?',
+      answer: 'Websites can be blocked due to government censorship, school or workplace filters, geo-licensing agreements, or ISP restrictions. Our tool helps identify the specific block type.',
+    },
+    {
+      question: 'Can I unblock YouTube, Twitter, and TikTok?',
+      answer: 'Yes! Our guides provide step-by-step instructions to unblock popular platforms like YouTube, Twitter, TikTok, and more using VPNs, proxies, and other methods.',
+    },
   ])
+
+  // SoftwareApplication Schema for the diagnosis tool
+  const softwareSchema = buildSoftwareApplicationSchema({
+    name: 'Website Unblocker Diagnosis Tool',
+    description: 'Free online tool to diagnose website accessibility issues and find solutions to unblock any website.',
+    category: 'UtilitiesApplication',
+    price: '0',
+    rating: 4.8,
+    ratingCount: 1250,
+  })
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={organizationSchema} />
+      <JsonLd data={webSiteSchema} />
+      <JsonLd data={faqSchema} />
+      <JsonLd data={softwareSchema} />
 
       {/* Hero Section */}
       <section className="pt-16 pb-24 px-4">

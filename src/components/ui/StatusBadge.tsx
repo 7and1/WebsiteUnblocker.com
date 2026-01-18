@@ -1,4 +1,4 @@
-import { AlertTriangle, Loader2, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { ShieldCheck, ShieldAlert, AlertTriangle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type StatusVariant = 'accessible' | 'blocked' | 'error' | 'loading'

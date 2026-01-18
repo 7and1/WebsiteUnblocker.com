@@ -1,87 +1,136 @@
 import { NextResponse } from 'next/server'
-import { normalizeUrl } from '@/lib/utils'
 import { rateLimit, rateLimitHeaders } from '@/lib/api/rateLimit'
+import { validateUrl, logValidationFailure } from '@/middleware/validation'
+import { getClientIp } from '@/lib/api/request'
+import { checkWebsite } from '@/services/WebsiteCheckService'
+import { RateLimitError, BadRequestError } from '@/errors'
+import { generateRequestId, logger } from '@/lib/logger'
 
-// Use nodejs runtime (edge requires separate function file in OpenNext)
-export const runtime = 'nodejs'
+// Edge runtime for optimal Cloudflare Workers performance
+export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 
-const USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+// Maximum URL length to prevent abuse
+const MAX_URL_LENGTH = 2048
 
+/**
+ * GET /api/check?url=example.com
+ *
+ * Check if a website is accessible
+ */
 export async function GET(request: Request) {
+  const requestId = generateRequestId()
+  const clientIp = getClientIp(request)
   const { searchParams } = new URL(request.url)
-  const url = searchParams.get('url')?.trim()
+  const rawUrl = searchParams.get('url')
 
-  const rate = rateLimit({ request, limit: 100, windowMs: 60_000, keyPrefix: 'check' })
-  const responseHeaders = { ...rateLimitHeaders(rate), 'Cache-Control': 'no-store' }
+  logger.info('Website check request', { requestId, url: rawUrl, ip: clientIp })
+
+  // Rate limit check (async for KV support)
+  const rate = await rateLimit({ request, limit: 100, windowMs: 60_000, keyPrefix: 'check' })
+  const baseHeaders = {
+    ...rateLimitHeaders(rate),
+    'Cache-Control': 'no-store',
+    'X-Request-ID': requestId,
+  }
+
   if (!rate.allowed) {
-    return NextResponse.json(
-      {
-        error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Too many requests. Please try again in 60 seconds.',
-        },
-      },
-      { status: 429, headers: responseHeaders }
-    )
+    const error = new RateLimitError('Too many requests. Please try again later.', rate.retryAfter, {
+      limit: rate.limit,
+      remaining: rate.remaining,
+      reset: rate.reset,
+      requestId,
+    })
+    return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: { ...baseHeaders, ...error.getHeaders() } })
   }
 
-  if (!url) {
-    return NextResponse.json(
-      {
-        error: {
-          code: 'URL_REQUIRED',
-          message: 'URL required',
-        },
-      },
-      { status: 400, headers: responseHeaders }
-    )
+  // Validate URL parameter exists
+  if (!rawUrl) {
+    const error = new BadRequestError('URL parameter is required', undefined, requestId)
+    return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: baseHeaders })
   }
 
-  const normalized = normalizeUrl(url)
-  if (!normalized) {
-    return NextResponse.json(
-      {
-        error: {
-          code: 'INVALID_URL',
-          message: 'Invalid URL format',
-        },
-      },
-      { status: 400, headers: responseHeaders }
+  // Check URL length before processing
+  if (rawUrl.length > MAX_URL_LENGTH) {
+    logValidationFailure({
+      type: 'url_too_long',
+      input: rawUrl.substring(0, 100),
+      ip: clientIp,
+    })
+    const error = new BadRequestError(
+      `URL exceeds maximum length of ${MAX_URL_LENGTH} characters`,
+      { field: 'url', maxLength: MAX_URL_LENGTH },
+      requestId
     )
+    return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: baseHeaders })
   }
 
-  const startTime = Date.now()
+  // Validate URL format and security
+  const urlValidation = validateUrl(rawUrl, {
+    allowedProtocols: ['http:', 'https:'],
+    allowUserPass: false,
+    maxLength: MAX_URL_LENGTH,
+  })
+
+  if (!urlValidation.valid) {
+    logValidationFailure({
+      type: 'invalid_url',
+      input: rawUrl,
+      ip: clientIp,
+    })
+    const error = new BadRequestError(
+      urlValidation.error === 'INTERNAL_ADDRESS_NOT_ALLOWED'
+        ? 'Internal IP addresses are not allowed'
+        : 'Invalid URL format or not allowed',
+      { field: 'url', code: urlValidation.error },
+      requestId
+    )
+    return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: baseHeaders })
+  }
+
+  const targetUrl = urlValidation.sanitized!
 
   try {
-    const response = await fetch(normalized, {
-      method: 'HEAD',
-      headers: {
-        'User-Agent': USER_AGENT,
-      },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(5000),
+    // Use service layer for website checking
+    const result = await checkWebsite(targetUrl, {
+      timeout: 5000,
+      maxRetries: 1,
+      requestId,
     })
 
+    logger.info('Website check completed', {
+      requestId,
+      targetUrl,
+      status: result.status,
+      isAccessible: result.isAccessible,
+      latency: result.latency,
+    })
+
+    // Build response with rate limit headers
     return NextResponse.json(
       {
-        status: response.ok ? 'accessible' : 'error',
-        code: response.status,
-        latency: Date.now() - startTime,
-        target: normalized,
+        status: result.isAccessible ? 'accessible' : result.status,
+        code: result.code,
+        latency: result.latency,
+        target: result.target,
+        ...(result.blockReason && { blockReason: result.blockReason }),
+        ...(result.error && { error: result.error }),
+        ...(result.retryCount !== undefined && { retryCount: result.retryCount }),
       },
-      { headers: responseHeaders }
+      { headers: baseHeaders }
     )
   } catch (error) {
+    // Handle unexpected errors
+    logger.error('Website check failed', error as Error, { requestId, targetUrl })
     return NextResponse.json(
       {
-        status: 'blocked',
-        latency: Date.now() - startTime,
-        target: normalized,
-        error: 'Connection Timeout or Blocked',
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Unable to check website status',
+          requestId,
+        },
       },
-      { headers: responseHeaders }
+      { status: 500, headers: baseHeaders }
     )
   }
 }

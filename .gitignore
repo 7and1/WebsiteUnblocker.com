@@ -13,10 +13,12 @@ node_modules
 
 # Environment & Secrets
 .env
-.env.local
+.env.*
 .dev.vars
 wrangler.jsonc
 wrangler.toml
+!.env.example
+!wrangler.toml.example
 
 # Local database
 local.db

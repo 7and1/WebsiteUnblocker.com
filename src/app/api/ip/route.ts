@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getClientIp } from '@/lib/api/request'
 
-// Use nodejs runtime (edge requires separate function file in OpenNext)
-export const runtime = 'nodejs'
+// Edge runtime for optimal Cloudflare Workers performance
+export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
