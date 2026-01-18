@@ -14,12 +14,13 @@ export const metadata = buildMetadata({
 export const revalidate = 3600
 
 type Props = {
-  searchParams?: { page?: string; tag?: string }
+  searchParams: Promise<{ page?: string; tag?: string }>
 }
 
-export default async function BlogPage({ searchParams = {} }: Props) {
-  const page = Number(searchParams.page || '1')
-  const tag = searchParams.tag ? decodeURIComponent(searchParams.tag) : undefined
+export default async function BlogPage({ searchParams }: Props) {
+  const resolvedParams = await searchParams
+  const page = Number(resolvedParams.page || '1')
+  const tag = resolvedParams.tag ? decodeURIComponent(resolvedParams.tag) : undefined
 
   const payload = await getPayload({ config: configPromise })
   const posts = await payload.find({
