@@ -4,6 +4,10 @@ import { siteConfig } from '@/config/site'
 import { absoluteUrl } from '@/lib/utils'
 import { unblockTargets, blockedTargets, tools, vpnComparisons, vpnBestFor, vpnProviders } from '@/lib/content'
 
+// Use nodejs runtime for Payload CMS compatibility
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 const escapeXml = (value: string) =>
   value
     .replace(/&/g, '&amp;')

@@ -5,7 +5,9 @@ import { ContactSchema } from '@/lib/validation/contact'
 import { rateLimit, rateLimitHeaders } from '@/lib/api/rateLimit'
 import { getClientIp, getUserAgent } from '@/lib/api/request'
 
-export const runtime = 'edge'
+// Use nodejs runtime for Payload CMS compatibility
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   const rate = rateLimit({ request, limit: 5, windowMs: 60_000, keyPrefix: 'contact' })
