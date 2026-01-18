@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return buildMetadata({
     title: post.meta_title || post.title,
-    description: post.meta_description,
+    description: post.meta_description || undefined,
     path: `/blog/${post.slug}`,
   })
 }
