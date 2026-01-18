@@ -1,0 +1,31 @@
+# Build outputs
+.next
+.open-next
+node_modules
+.wrangler
+.pnpm-store
+
+# Logs
+*.log
+
+# System
+.DS_Store
+
+# Environment & Secrets
+.env
+.env.local
+.dev.vars
+wrangler.jsonc
+wrangler.toml
+
+# Local database
+local.db
+payload-local.sqlite
+*.sqlite
+
+# Test artifacts
+test-results
+playwright-report
+
+# Cloudflare cache
+node_modules/.cache/wrangler

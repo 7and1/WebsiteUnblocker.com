@@ -1,0 +1,17 @@
+export const blockedTargets = [
+  { slug: 'youtube-china', site: 'YouTube', country: 'China', status: 'blocked' },
+  { slug: 'youtube-russia', site: 'YouTube', country: 'Russia', status: 'restricted' },
+  { slug: 'twitter-china', site: 'Twitter/X', country: 'China', status: 'blocked' },
+  { slug: 'twitter-russia', site: 'Twitter/X', country: 'Russia', status: 'restricted' },
+  { slug: 'facebook-china', site: 'Facebook', country: 'China', status: 'blocked' },
+  { slug: 'instagram-iran', site: 'Instagram', country: 'Iran', status: 'blocked' },
+  { slug: 'tiktok-india', site: 'TikTok', country: 'India', status: 'blocked' },
+  { slug: 'netflix-china', site: 'Netflix', country: 'China', status: 'blocked' },
+  { slug: 'whatsapp-uae', site: 'WhatsApp', country: 'UAE', status: 'restricted' },
+  { slug: 'telegram-iran', site: 'Telegram', country: 'Iran', status: 'blocked' },
+  { slug: 'wikipedia-turkey', site: 'Wikipedia', country: 'Turkey', status: 'restricted' },
+  { slug: 'discord-uae', site: 'Discord', country: 'UAE', status: 'restricted' },
+  { slug: 'reddit-indonesia', site: 'Reddit', country: 'Indonesia', status: 'blocked' },
+  { slug: 'twitch-china', site: 'Twitch', country: 'China', status: 'blocked' },
+  { slug: 'signal-iran', site: 'Signal', country: 'Iran', status: 'blocked' },
+]
