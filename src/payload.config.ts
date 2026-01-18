@@ -19,11 +19,12 @@ const dirname = path.dirname(filename)
 
 const isCLI = process.argv.some((value) => value.match(/^(generate|migrate):?/))
 const isProduction = process.env.NODE_ENV === 'production'
-const useD1 = process.env.PAYLOAD_DATABASE === 'd1' || isProduction
-const isBuild = process.argv.some((value) => value.includes('next build'))
+const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS
+const isBuild = process.argv.some((value) => value.includes('next') && value.includes('build')) || isCI
+const useD1 = !isBuild && (process.env.PAYLOAD_DATABASE === 'd1' || isProduction)
 
 async function getCloudflareCtx() {
-  if (isCLI || isBuild || !isProduction) {
+  if (isCLI || !isProduction) {
     const wrangler = await import(/* webpackIgnore: true */ `${'__wrangler'.replaceAll('_', '')}`)
     return wrangler.getPlatformProxy({
       environment: process.env.CLOUDFLARE_ENV,
