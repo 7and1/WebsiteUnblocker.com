@@ -7,7 +7,7 @@ import { vpnComparisons } from '@/lib/content'
 const YEAR = 2026
 
 type Props = {
-  params: { comparison: string }
+  params: Promise<{ comparison: string }>
 }
 
 export const revalidate = 604800
@@ -16,9 +16,10 @@ export function generateStaticParams() {
   return vpnComparisons.map((comparison) => ({ comparison: comparison.slug }))
 }
 
-export function generateMetadata({ params }: Props) {
-  const comparison = vpnComparisons.find((item) => item.slug === params.comparison)
-  if (!comparison) return buildMetadata({ title: 'Comparison Not Found', path: `/compare/${params.comparison}` })
+export async function generateMetadata({ params }: Props) {
+  const { comparison: comparisonSlug } = await params
+  const comparison = vpnComparisons.find((item) => item.slug === comparisonSlug)
+  if (!comparison) return buildMetadata({ title: 'Comparison Not Found', path: `/compare/${comparisonSlug}` })
 
   return buildMetadata({
     title: `${comparison.a} vs ${comparison.b}: Which Unblocks More Sites? | ${YEAR}`,
@@ -27,8 +28,9 @@ export function generateMetadata({ params }: Props) {
   })
 }
 
-export default function ComparePage({ params }: Props) {
-  const comparison = vpnComparisons.find((item) => item.slug === params.comparison)
+export default async function ComparePage({ params }: Props) {
+  const { comparison: comparisonSlug } = await params
+  const comparison = vpnComparisons.find((item) => item.slug === comparisonSlug)
   if (!comparison) notFound()
 
   const breadcrumbSchema = buildBreadcrumbSchema([

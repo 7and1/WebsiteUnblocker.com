@@ -10,7 +10,7 @@ import { JsonLd } from '@/components/seo/JsonLd'
 import { formatDate } from '@/lib/utils'
 
 type Props = {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export const revalidate = 3600
@@ -23,15 +23,16 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
   const payload = await getPayload({ config: configPromise })
   const posts = await payload.find({
     collection: 'posts',
-    where: { slug: { equals: params.slug } },
+    where: { slug: { equals: slug } },
     limit: 1,
   })
 
   const post = posts.docs[0]
-  if (!post) return buildMetadata({ title: 'Post Not Found', path: `/blog/${params.slug}` })
+  if (!post) return buildMetadata({ title: 'Post Not Found', path: `/blog/${slug}` })
 
   return buildMetadata({
     title: post.meta_title || post.title,
@@ -41,10 +42,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BlogPostPage({ params }: Props) {
+  const { slug } = await params
   const payload = await getPayload({ config: configPromise })
   const posts = await payload.find({
     collection: 'posts',
-    where: { slug: { equals: params.slug } },
+    where: { slug: { equals: slug } },
     limit: 1,
   })
 

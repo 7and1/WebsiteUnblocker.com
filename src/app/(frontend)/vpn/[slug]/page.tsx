@@ -7,7 +7,7 @@ import { vpnBestFor, vpnProviders } from '@/lib/content'
 const YEAR = 2026
 
 type Props = {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export const revalidate = 86400
@@ -19,40 +19,42 @@ export function generateStaticParams() {
   ]
 }
 
-export function generateMetadata({ params }: Props) {
-  const reviewSlug = params.slug.replace(/-review$/, '')
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params
+  const reviewSlug = slug.replace(/-review$/, '')
   const provider = vpnProviders.find((item) => item.slug === reviewSlug)
   if (provider) {
     return buildMetadata({
       title: `${provider.name} Review ${YEAR}: ${provider.tagline}`,
       description: `Our ${YEAR} review of ${provider.name}. We tested speed, security, and streaming access to see if it unblocks top sites.`,
-      path: `/vpn/${params.slug}`,
+      path: `/vpn/${slug}`,
     })
   }
 
-  const bestFor = vpnBestFor.find((item) => item.slug === params.slug)
+  const bestFor = vpnBestFor.find((item) => item.slug === slug)
   if (bestFor) {
     return buildMetadata({
       title: `${bestFor.title} ${YEAR}`,
       description: `Discover the best VPNs for ${bestFor.focus}. Updated for ${YEAR}.`,
-      path: `/vpn/${params.slug}`,
+      path: `/vpn/${slug}`,
     })
   }
 
-  return buildMetadata({ title: 'VPN Guide Not Found', path: `/vpn/${params.slug}` })
+  return buildMetadata({ title: 'VPN Guide Not Found', path: `/vpn/${slug}` })
 }
 
-export default function VpnDetailPage({ params }: Props) {
-  const reviewSlug = params.slug.replace(/-review$/, '')
+export default async function VpnDetailPage({ params }: Props) {
+  const { slug } = await params
+  const reviewSlug = slug.replace(/-review$/, '')
   const provider = vpnProviders.find((item) => item.slug === reviewSlug)
-  const bestFor = vpnBestFor.find((item) => item.slug === params.slug)
+  const bestFor = vpnBestFor.find((item) => item.slug === slug)
 
   if (!provider && !bestFor) notFound()
 
   const breadcrumbSchema = buildBreadcrumbSchema([
     { name: 'Home', path: '/' },
     { name: 'VPN', path: '/vpn' },
-    { name: provider ? `${provider.name} Review` : bestFor?.title || '', path: `/vpn/${params.slug}` },
+    { name: provider ? `${provider.name} Review` : bestFor?.title || '', path: `/vpn/${slug}` },
   ])
 
   return (

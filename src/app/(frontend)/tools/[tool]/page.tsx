@@ -10,7 +10,7 @@ const TOOL_COMPONENTS: Record<string, React.ReactNode> = {
 }
 
 type Props = {
-  params: { tool: string }
+  params: Promise<{ tool: string }>
 }
 
 export const revalidate = 86400
@@ -19,9 +19,10 @@ export function generateStaticParams() {
   return tools.map((tool) => ({ tool: tool.slug }))
 }
 
-export function generateMetadata({ params }: Props) {
-  const tool = tools.find((entry) => entry.slug === params.tool)
-  if (!tool) return buildMetadata({ title: 'Tool Not Found', path: `/tools/${params.tool}` })
+export async function generateMetadata({ params }: Props) {
+  const { tool: toolSlug } = await params
+  const tool = tools.find((entry) => entry.slug === toolSlug)
+  if (!tool) return buildMetadata({ title: 'Tool Not Found', path: `/tools/${toolSlug}` })
 
   return buildMetadata({
     title: `${tool.name} | Website Unblocker Tools`,
@@ -30,8 +31,9 @@ export function generateMetadata({ params }: Props) {
   })
 }
 
-export default function ToolPage({ params }: Props) {
-  const tool = tools.find((entry) => entry.slug === params.tool)
+export default async function ToolPage({ params }: Props) {
+  const { tool: toolSlug } = await params
+  const tool = tools.find((entry) => entry.slug === toolSlug)
   if (!tool) notFound()
 
   const breadcrumbSchema = buildBreadcrumbSchema([

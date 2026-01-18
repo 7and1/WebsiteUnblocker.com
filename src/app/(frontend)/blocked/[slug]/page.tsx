@@ -8,7 +8,7 @@ import { blockedTargets } from '@/lib/content'
 const YEAR = 2026
 
 type Props = {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export const revalidate = 86400
@@ -17,9 +17,10 @@ export function generateStaticParams() {
   return blockedTargets.map((item) => ({ slug: item.slug }))
 }
 
-export function generateMetadata({ params }: Props) {
-  const item = blockedTargets.find((entry) => entry.slug === params.slug)
-  if (!item) return buildMetadata({ title: 'Status Not Found', path: `/blocked/${params.slug}` })
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params
+  const item = blockedTargets.find((entry) => entry.slug === slug)
+  if (!item) return buildMetadata({ title: 'Status Not Found', path: `/blocked/${slug}` })
 
   return buildMetadata({
     title: `Is ${item.site} Blocked in ${item.country}? [${YEAR} Status + Solutions]`,
@@ -28,8 +29,9 @@ export function generateMetadata({ params }: Props) {
   })
 }
 
-export default function BlockedPage({ params }: Props) {
-  const item = blockedTargets.find((entry) => entry.slug === params.slug)
+export default async function BlockedPage({ params }: Props) {
+  const { slug } = await params
+  const item = blockedTargets.find((entry) => entry.slug === slug)
   if (!item) notFound()
 
   const siteSlug = item.slug.split('-').slice(0, -1).join('-')

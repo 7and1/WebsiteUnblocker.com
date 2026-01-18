@@ -8,7 +8,7 @@ import { unblockTargets } from '@/lib/content'
 const YEAR = 2026
 
 type Props = {
-  params: { website: string }
+  params: Promise<{ website: string }>
 }
 
 export const revalidate = 86400
@@ -17,9 +17,10 @@ export function generateStaticParams() {
   return unblockTargets.map((target) => ({ website: target.slug }))
 }
 
-export function generateMetadata({ params }: Props) {
-  const target = unblockTargets.find((item) => item.slug === params.website)
-  if (!target) return buildMetadata({ title: 'Guide Not Found', path: `/unblock/${params.website}` })
+export async function generateMetadata({ params }: Props) {
+  const { website } = await params
+  const target = unblockTargets.find((item) => item.slug === website)
+  if (!target) return buildMetadata({ title: 'Guide Not Found', path: `/unblock/${website}` })
 
   return buildMetadata({
     title: `How to Unblock ${target.name} in ${YEAR} [Working Methods]`,
@@ -28,8 +29,9 @@ export function generateMetadata({ params }: Props) {
   })
 }
 
-export default function UnblockPage({ params }: Props) {
-  const target = unblockTargets.find((item) => item.slug === params.website)
+export default async function UnblockPage({ params }: Props) {
+  const { website } = await params
+  const target = unblockTargets.find((item) => item.slug === website)
   if (!target) notFound()
 
   const breadcrumbSchema = buildBreadcrumbSchema([
