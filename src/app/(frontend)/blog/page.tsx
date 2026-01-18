@@ -11,7 +11,8 @@ export const metadata = buildMetadata({
   path: '/blog',
 })
 
-export const revalidate = 3600
+// Force dynamic rendering for Payload CMS
+export const dynamic = 'force-dynamic'
 
 type Props = {
   searchParams: Promise<{ page?: string; tag?: string }>

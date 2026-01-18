@@ -13,14 +13,8 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
-export const revalidate = 3600
-
-export async function generateStaticParams() {
-  const payload = await getPayload({ config: configPromise })
-  const posts = await payload.find({ collection: 'posts', limit: 1000, depth: 0 })
-
-  return posts.docs.map((post) => ({ slug: post.slug }))
-}
+// Force dynamic rendering for Payload CMS
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
