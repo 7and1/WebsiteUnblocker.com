@@ -61,9 +61,9 @@ export default async function BlogPostPage({ params }: Props) {
 
   const articleSchema = buildArticleSchema({
     title: post.title,
-    description: post.meta_description,
+    description: post.meta_description || undefined,
     slug: post.slug,
-    datePublished: post.published_date,
+    datePublished: post.published_date || undefined,
     dateModified: post.updatedAt,
   })
 
