@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getClientIp } from '@/lib/api/request'
 
-export const runtime = 'edge'
+// Use nodejs runtime (edge requires separate function file in OpenNext)
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   const ip = getClientIp(request)

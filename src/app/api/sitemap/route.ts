@@ -2,8 +2,8 @@ import { siteConfig } from '@/config/site'
 import { absoluteUrl } from '@/lib/utils'
 import { unblockTargets, blockedTargets, tools, vpnComparisons, vpnBestFor, vpnProviders } from '@/lib/content'
 
-// Use edge runtime - no Payload CMS dependency
-export const runtime = 'edge'
+// Use nodejs runtime (edge requires separate function file in OpenNext)
+export const runtime = 'nodejs'
 
 const escapeXml = (value: string) =>
   value

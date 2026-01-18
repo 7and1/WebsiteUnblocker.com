@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 
-export const runtime = 'edge'
+// Use nodejs runtime (edge requires separate function file in OpenNext)
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   let database: 'ok' | 'error' = 'error'
