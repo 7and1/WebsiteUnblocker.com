@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  serverExternalPackages: ['@payloadcms/db-d1-sqlite', 'jose'],
+  serverExternalPackages: ['@payloadcms/db-d1-sqlite', '@payloadcms/db-sqlite', 'jose', 'libsql', '@libsql/client'],
   eslint: {
     ignoreDuringBuilds: false,
   },

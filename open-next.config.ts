@@ -11,7 +11,7 @@ const config: OpenNextConfig = {
       queue: 'dummy',
     },
   },
-  edgeExternals: ['node:crypto'],
+  edgeExternals: ['node:crypto', 'libsql', '@libsql/client', '@payloadcms/db-sqlite'],
   middleware: {
     external: true,
     override: {
