@@ -1,7 +1,6 @@
 import { siteConfig } from '@/config/site'
 
-// Edge runtime for optimal Cloudflare Workers performance
-export const runtime = 'edge'
+// Cloudflare Workers compatible runtime (default nodejs with nodejs_compat)
 
 export async function GET() {
   const content = `# Robots.txt for ${siteConfig.name}

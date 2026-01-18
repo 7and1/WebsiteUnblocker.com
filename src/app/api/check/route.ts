@@ -6,8 +6,7 @@ import { checkWebsite } from '@/services/WebsiteCheckService'
 import { RateLimitError, BadRequestError } from '@/errors'
 import { generateRequestId, logger } from '@/lib/logger'
 
-// Edge runtime for optimal Cloudflare Workers performance
-export const runtime = 'edge'
+// Cloudflare Workers compatible runtime
 export const dynamic = 'force-dynamic'
 
 // Maximum URL length to prevent abuse

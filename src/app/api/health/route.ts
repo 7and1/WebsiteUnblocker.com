@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 
-// Edge runtime for optimal Cloudflare Workers performance
-export const runtime = 'edge'
+// Cloudflare Workers compatible runtime
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
