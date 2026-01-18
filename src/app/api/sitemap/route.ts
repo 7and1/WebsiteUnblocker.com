@@ -1,12 +1,9 @@
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
 import { siteConfig } from '@/config/site'
 import { absoluteUrl } from '@/lib/utils'
 import { unblockTargets, blockedTargets, tools, vpnComparisons, vpnBestFor, vpnProviders } from '@/lib/content'
 
-// Use nodejs runtime for Payload CMS compatibility
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
+// Use edge runtime - no Payload CMS dependency
+export const runtime = 'edge'
 
 const escapeXml = (value: string) =>
   value
@@ -42,9 +39,6 @@ function buildSitemapUrl(
 }
 
 export async function GET() {
-  const payload = await getPayload({ config: configPromise })
-  const posts = await payload.find({ collection: 'posts', limit: 1000, depth: 0 })
-
   const staticPages = [
     { path: '/', priority: 1.0, changefreq: 'daily' },
     { path: '/blog', priority: 0.8, changefreq: 'daily' },
@@ -58,14 +52,6 @@ export async function GET() {
     { path: '/privacy', priority: 0.3, changefreq: 'yearly' },
     { path: '/terms', priority: 0.3, changefreq: 'yearly' },
   ]
-
-  const blogPages = posts.docs.map((post) =>
-    buildSitemapUrl(`/blog/${post.slug}`, {
-      priority: 0.7,
-      changefreq: 'weekly',
-      lastmod: post.updatedAt,
-    })
-  )
 
   const unblockPages = unblockTargets.map((target) =>
     buildSitemapUrl(`/unblock/${target.slug}`, {
@@ -116,7 +102,6 @@ export async function GET() {
         changefreq: page.changefreq,
       })
     ),
-    ...blogPages,
     ...unblockPages,
     ...blockedPages,
     ...toolPages,
