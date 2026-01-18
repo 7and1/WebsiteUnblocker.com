@@ -1,7 +1,7 @@
 import { sqliteD1Adapter } from '@payloadcms/db-d1-sqlite'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
-import { buildConfig, type DatabaseAdapter } from 'payload'
+import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 import type { GetPlatformProxyOptions } from 'wrangler'
@@ -53,7 +53,7 @@ function createMockD1Binding() {
   }
 }
 
-async function getDatabaseAdapter(): Promise<DatabaseAdapter> {
+async function getDatabaseAdapter() {
   // During CI build, use D1 adapter with mock binding
   if (isBuild) {
     return sqliteD1Adapter({ binding: createMockD1Binding() as any })
