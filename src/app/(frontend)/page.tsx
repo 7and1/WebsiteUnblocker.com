@@ -13,11 +13,21 @@ export const metadata = buildMetadata({
   path: '/',
 })
 
-export const revalidate = 3600
+// Force dynamic rendering for Payload CMS
+export const dynamic = 'force-dynamic'
+
+async function getLatestPosts() {
+  try {
+    const payload = await getPayload({ config: configPromise })
+    const posts = await payload.find({ collection: 'posts', limit: 6, sort: '-published_date', depth: 1 })
+    return posts.docs
+  } catch {
+    return []
+  }
+}
 
 export default async function HomePage() {
-  const payload = await getPayload({ config: configPromise })
-  const posts = await payload.find({ collection: 'posts', limit: 6, sort: '-published_date', depth: 1 })
+  const posts = await getLatestPosts()
 
   const breadcrumbSchema = buildBreadcrumbSchema([
     { name: 'Home', path: '/' },
@@ -92,7 +102,7 @@ export default async function HomePage() {
       </section>
 
       {/* Blog Section */}
-      {posts.docs.length > 0 && (
+      {posts.length > 0 && (
         <section className="py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-12">
@@ -108,7 +118,7 @@ export default async function HomePage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.docs.map((post: any) => (
+              {posts.map((post: any) => (
                 <BlogCard
                   key={post.id}
                   title={post.title}
