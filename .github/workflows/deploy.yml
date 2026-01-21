@@ -83,7 +83,7 @@ jobs:
 
       - name: Create wrangler.toml
         run: |
-          cat > wrangler.toml << 'EOF'
+          cat > wrangler.toml << EOF
           name = "websiteunblocker"
           main = ".open-next/worker.js"
           compatibility_date = "2025-01-18"
@@ -112,6 +112,17 @@ jobs:
             { pattern = "www.websiteunblocker.com/*", zone_name = "websiteunblocker.com" }
           ]
           EOF
+          # Remove leading whitespace from each line
+          sed -i 's/^          //' wrangler.toml
+          # Verify wrangler.toml was created correctly
+          cat wrangler.toml
+
+      - name: Set worker secrets
+        run: |
+          echo "${{ secrets.PAYLOAD_SECRET }}" | pnpm exec wrangler secret put PAYLOAD_SECRET
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Build with OpenNext
         run: |
