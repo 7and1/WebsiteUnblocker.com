@@ -1,5 +1,3 @@
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { ArrowRight, Globe, Lock, Shield, Zap } from 'lucide-react'
@@ -77,18 +75,30 @@ export const metadata = buildMetadata({
 export const revalidate = 300
 
 async function getLatestPosts() {
-  // Use KV cache for frequently accessed posts data
-  // Reduces D1 database load and improves response times
-  return kvCache({
-    key: 'homepage:latest-posts',
-    ttl: 300, // 5 minutes cache
-    swrTtl: 600, // Serve stale for up to 10 minutes while revalidating
-    fetchFn: async () => {
-      const payload = await getPayload({ config: configPromise })
-      const posts = await payload.find({ collection: 'posts', limit: 6, sort: '-published_date', depth: 1 })
-      return posts.docs
-    },
-  })
+  try {
+    // Dynamically import Payload to avoid module initialization issues
+    const [{ getPayload }, configPromise] = await Promise.all([
+      import('payload'),
+      import('@payload-config').then(m => m.default),
+    ])
+
+    // Use KV cache for frequently accessed posts data
+    // Reduces D1 database load and improves response times
+    return await kvCache({
+      key: 'homepage:latest-posts',
+      ttl: 300, // 5 minutes cache
+      swrTtl: 600, // Serve stale for up to 10 minutes while revalidating
+      fetchFn: async () => {
+        const payload = await getPayload({ config: configPromise })
+        const posts = await payload.find({ collection: 'posts', limit: 6, sort: '-published_date', depth: 1 })
+        return posts.docs
+      },
+    })
+  } catch (error) {
+    // Gracefully handle Payload CMS failures - return empty posts
+    console.error('Failed to fetch posts:', error)
+    return []
+  }
 }
 
 export default async function HomePage() {
