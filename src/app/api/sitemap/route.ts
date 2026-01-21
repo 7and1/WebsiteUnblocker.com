@@ -1,8 +1,5 @@
 import { siteConfig } from '@/config/site'
 
-// Cloudflare Workers compatible runtime
-export const runtime = 'edge'
-
 export async function GET() {
   const now = new Date().toISOString()
 

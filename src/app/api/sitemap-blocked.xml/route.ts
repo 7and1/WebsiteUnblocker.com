@@ -2,8 +2,6 @@ import { siteConfig } from '@/config/site'
 import { absoluteUrl } from '@/lib/utils'
 import { blockedTargets } from '@/lib/content'
 
-export const runtime = 'edge'
-
 const escapeXml = (value: string) =>
   value
     .replace(/&/g, '&amp;')

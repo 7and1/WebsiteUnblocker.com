@@ -2,8 +2,6 @@ import { siteConfig } from '@/config/site'
 import { absoluteUrl } from '@/lib/utils'
 import { tools, vpnComparisons, vpnBestFor, vpnProviders } from '@/lib/content'
 
-export const runtime = 'edge'
-
 interface SitemapUrlEntry {
   path: string
   priority: number
