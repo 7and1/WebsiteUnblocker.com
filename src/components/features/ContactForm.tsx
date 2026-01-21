@@ -83,7 +83,7 @@ export function ContactForm() {
           placeholder="Message"
           required
           rows={6}
-          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition-colors focus:border-transparent focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition-colors focus:border-transparent focus:ring-2 focus:ring-emerald-500"
         />
       </div>
       <input

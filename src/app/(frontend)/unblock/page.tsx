@@ -31,11 +31,11 @@ export default function UnblockHubPage() {
             <Link
               key={target.slug}
               href={`/unblock/${target.slug}`}
-              className="rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-lg"
+              className="rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-emerald-200 hover:shadow-lg"
             >
               <h2 className="text-xl font-bold text-slate-900">Unblock {target.name}</h2>
               <p className="mt-2 text-sm text-slate-500">{target.summary}</p>
-              <span className="mt-4 inline-flex text-sm font-medium text-blue-600">Read guide →</span>
+              <span className="mt-4 inline-flex text-sm font-medium text-emerald-600">Read guide →</span>
             </Link>
           ))}
         </div>

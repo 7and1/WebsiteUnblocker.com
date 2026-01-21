@@ -87,7 +87,7 @@ export function TableOfContents() {
               className={cn(
                 'block text-left w-full py-1.5 px-4 -ml-px border-l-2 transition-colors',
                 activeId === heading.id
-                  ? 'border-blue-500 text-blue-600 font-medium'
+                  ? 'border-emerald-500 text-emerald-600 font-medium'
                   : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300',
                 heading.level === 3 && 'pl-8 text-xs'
               )}

@@ -79,7 +79,7 @@ export default function GuidesPage() {
                     className={cn(
                       'w-full text-left px-4 py-2 rounded-lg text-sm transition-colors',
                       selectedCategory === cat.value
-                        ? 'bg-blue-50 text-blue-600 font-semibold'
+                        ? 'bg-emerald-50 text-emerald-600 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'
                     )}
                   >
@@ -87,7 +87,7 @@ export default function GuidesPage() {
                       {cat.label}
                       <span className={cn(
                         'text-xs px-2 py-0.5 rounded-full',
-                        selectedCategory === cat.value ? 'bg-blue-100' : 'bg-slate-100'
+                        selectedCategory === cat.value ? 'bg-emerald-100' : 'bg-slate-100'
                       )}>
                         {cat.count}
                       </span>
@@ -120,12 +120,12 @@ export default function GuidesPage() {
                     <Link
                       key={guide.slug}
                       href={`/guides/${guide.slug}`}
-                      className="group relative overflow-hidden rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-6 transition-all hover:shadow-lg"
+                      className="group relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6 transition-all hover:shadow-lg"
                     >
-                      <span className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                      <span className="absolute top-4 right-4 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
                         Featured
                       </span>
-                      <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
+                      <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
                         {guide.title}
                       </h3>
                       <p className="text-slate-600">{guide.description}</p>
@@ -151,11 +151,11 @@ export default function GuidesPage() {
                     <Link
                       key={guide.slug}
                       href={`/guides/${guide.slug}`}
-                      className="block group rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-blue-200 hover:shadow-md"
+                      className="block group rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-emerald-200 hover:shadow-md"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors mb-1">
+                          <h3 className="text-lg font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors mb-1">
                             {guide.title}
                           </h3>
                           <p className="text-slate-600">{guide.description}</p>

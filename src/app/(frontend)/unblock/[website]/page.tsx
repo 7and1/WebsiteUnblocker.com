@@ -133,7 +133,7 @@ export default async function UnblockPage({ params }: Props) {
         <section className="mx-auto max-w-4xl px-4 py-16">
           <div className="flex flex-col gap-6">
             <header>
-              <p className="text-sm font-medium text-blue-600">Unblock Guide</p>
+              <p className="text-sm font-medium text-emerald-600">Unblock Guide</p>
               <h1 className="mt-2 text-4xl font-extrabold text-slate-900">
                 How to Unblock {target.name} in {YEAR}
               </h1>
@@ -295,7 +295,7 @@ export default async function UnblockPage({ params }: Props) {
                     <Link
                       key={item.slug}
                       href={`/unblock/${item.slug}`}
-                      className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-600 transition-colors hover:border-blue-200 hover:text-blue-600"
+                      className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-600 transition-colors hover:border-emerald-200 hover:text-emerald-600"
                     >
                       Unblock {item.name}
                     </Link>
@@ -305,7 +305,7 @@ export default async function UnblockPage({ params }: Props) {
             )}
 
             {/* Category Hub Links for Internal Linking */}
-            <nav className="rounded-2xl border border-blue-100 bg-blue-50 p-6" aria-label="Browse by category">
+            <nav className="rounded-2xl border border-emerald-100 bg-emerald-50 p-6" aria-label="Browse by category">
               <h3 className="text-lg font-semibold text-slate-900">
                 Browse Unblock Guides by Category
               </h3>
@@ -323,8 +323,8 @@ export default async function UnblockPage({ params }: Props) {
                       href={`/unblock?category=${category.toLowerCase()}`}
                       className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
                         isCurrentCategory
-                          ? 'border-blue-300 bg-blue-100 text-blue-700 font-medium'
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-600'
+                          ? 'border-emerald-300 bg-emerald-100 text-emerald-700 font-medium'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:text-emerald-600'
                       }`}
                     >
                       {label}

@@ -22,7 +22,7 @@ export default function ContactPage() {
         <h1 className="text-4xl font-extrabold text-slate-900">Contact Us</h1>
         <p className="mt-4 text-lg text-slate-600">
           Send us a message and our team will get back to you. You can also reach us at{' '}
-          <a className="text-blue-600" href={`mailto:${siteConfig.contact.email}`}>
+          <a className="text-emerald-600" href={`mailto:${siteConfig.contact.email}`}>
             {siteConfig.contact.email}
           </a>.
         </p>

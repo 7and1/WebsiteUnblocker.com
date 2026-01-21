@@ -19,7 +19,7 @@ export function BlogCard({ title, slug, tags, description, date, image }: BlogCa
   return (
     <Link
       href={`/blog/${slug}`}
-      className="group rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-lg"
+      className="group rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-emerald-200 hover:shadow-lg"
     >
       {image && (
         <div className="relative mb-4 aspect-video overflow-hidden rounded-xl">
@@ -43,7 +43,7 @@ export function BlogCard({ title, slug, tags, description, date, image }: BlogCa
         ))}
       </div>
 
-      <h3 className="mb-2 text-lg font-bold text-slate-900 transition-colors group-hover:text-blue-600">
+      <h3 className="mb-2 text-lg font-bold text-slate-900 transition-colors group-hover:text-emerald-600">
         {title}
       </h3>
 

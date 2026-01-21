@@ -31,11 +31,11 @@ export default function VpnHubPage() {
             <Link
               key={provider.slug}
               href={`/vpn/${provider.slug}-review`}
-              className="rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-lg"
+              className="rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-emerald-200 hover:shadow-lg"
             >
               <h2 className="text-xl font-bold text-slate-900">{provider.name} Review</h2>
               <p className="mt-2 text-sm text-slate-500">{provider.tagline}</p>
-              <span className="mt-4 inline-flex text-sm font-medium text-blue-600">Read review →</span>
+              <span className="mt-4 inline-flex text-sm font-medium text-emerald-600">Read review →</span>
             </Link>
           ))}
         </div>
@@ -46,11 +46,11 @@ export default function VpnHubPage() {
             <Link
               key={item.slug}
               href={`/vpn/${item.slug}`}
-              className="rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-lg"
+              className="rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-emerald-200 hover:shadow-lg"
             >
               <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
               <p className="mt-2 text-sm text-slate-500">{item.focus}</p>
-              <span className="mt-4 inline-flex text-sm font-medium text-blue-600">View picks →</span>
+              <span className="mt-4 inline-flex text-sm font-medium text-emerald-600">View picks →</span>
             </Link>
           ))}
         </div>

@@ -78,9 +78,9 @@ export function BlogClient({
             {featuredPosts.map(post => (
               <div
                 key={String(post.id)}
-                className="group relative rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-1"
+                className="group relative rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-1"
               >
-                <span className="absolute top-4 right-4 z-10 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                <span className="absolute top-4 right-4 z-10 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
                   Featured
                 </span>
                 <BlogCard
@@ -132,7 +132,7 @@ export function BlogClient({
                       className={cn(
                         'w-full text-left px-4 py-2 rounded-lg text-sm transition-colors',
                         selectedCategory === cat.value
-                          ? 'bg-blue-50 text-blue-600 font-semibold'
+                          ? 'bg-emerald-50 text-emerald-600 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'
                       )}
                     >
@@ -141,7 +141,7 @@ export function BlogClient({
                         {count > 0 && (
                           <span className={cn(
                             'text-xs px-2 py-0.5 rounded-full',
-                            selectedCategory === cat.value ? 'bg-blue-100' : 'bg-slate-100'
+                            selectedCategory === cat.value ? 'bg-emerald-100' : 'bg-slate-100'
                           )}>
                             {count}
                           </span>
@@ -231,7 +231,7 @@ export function BlogClient({
                         className={cn(
                           'w-10 h-10 rounded-lg text-sm font-medium transition-colors',
                           currentPage === page
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-emerald-600 text-white'
                             : 'text-slate-600 hover:bg-slate-100'
                         )}
                       >

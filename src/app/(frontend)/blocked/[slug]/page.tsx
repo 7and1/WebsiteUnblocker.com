@@ -88,7 +88,7 @@ export default async function BlockedPage({ params }: Props) {
 
       <article>
         <section className="mx-auto max-w-4xl px-4 py-16">
-          <Link href="/blocked" className="text-sm font-medium text-blue-600">
+          <Link href="/blocked" className="text-sm font-medium text-emerald-600">
             ← Back to blocked status checks
           </Link>
 
@@ -101,7 +101,7 @@ export default async function BlockedPage({ params }: Props) {
               <span className={`font-semibold ${
                 item.status === 'blocked' ? 'text-red-600' :
                 item.status === 'restricted' ? 'text-amber-600' :
-                'text-blue-600'
+                'text-emerald-600'
               }`}>
                 {item.status.toUpperCase()}
               </span>
@@ -221,7 +221,7 @@ export default async function BlockedPage({ params }: Props) {
                         <Link
                           key={related.slug}
                           href={`/blocked/${related.slug}`}
-                          className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600 transition-colors hover:border-blue-200 hover:text-blue-600"
+                          className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600 transition-colors hover:border-emerald-200 hover:text-emerald-600"
                         >
                           {related.site}
                         </Link>
@@ -237,7 +237,7 @@ export default async function BlockedPage({ params }: Props) {
                         <Link
                           key={related.slug}
                           href={`/blocked/${related.slug}`}
-                          className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600 transition-colors hover:border-blue-200 hover:text-blue-600"
+                          className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600 transition-colors hover:border-emerald-200 hover:text-emerald-600"
                         >
                           {related.country}
                         </Link>

@@ -135,7 +135,7 @@ export function UnblockGuideTemplate({
 
       {/* Hero Section */}
       <section className="mb-12">
-        <p className="text-sm font-medium text-blue-600 mb-2">Unblock Guide</p>
+        <p className="text-sm font-medium text-emerald-600 mb-2">Unblock Guide</p>
         <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">
           How to Unblock {websiteName} in {year}
         </h1>
@@ -253,7 +253,7 @@ export function UnblockGuideTemplate({
                 <Link
                   key={guide.slug}
                   href={`/unblock/${guide.slug}`}
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-600 transition-colors hover:border-blue-200 hover:text-blue-600"
+                  className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-600 transition-colors hover:border-emerald-200 hover:text-emerald-600"
                 >
                   Unblock {guide.name}
                 </Link>

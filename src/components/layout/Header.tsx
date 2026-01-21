@@ -62,10 +62,10 @@ export function Header() {
   const closeMenu = () => setMobileMenuOpen(false)
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/70 shadow-sm backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 text-xl font-bold text-slate-900">
-          <Shield className="h-6 w-6 text-blue-600" aria-hidden="true" />
+        <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900">
+          <Shield className="h-6 w-6 text-emerald-600" aria-hidden="true" />
           <span>WebsiteUnblocker</span>
         </Link>
 
@@ -84,7 +84,7 @@ export function Header() {
             href={siteConfig.affiliates.nordvpn}
             target="_blank"
             rel="noopener noreferrer"
-            className="min-h-[44px] rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+            className="min-h-[44px] rounded-lg bg-slate-900 px-4 py-2 font-semibold text-white shadow-sm transition-colors hover:bg-slate-800"
           >
             Get VPN
           </a>
@@ -94,7 +94,7 @@ export function Header() {
         <button
           ref={menuButtonRef}
           type="button"
-          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 md:hidden"
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white/80 p-2 text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 md:hidden"
           onClick={toggleMenu}
           aria-expanded={mobileMenuOpen}
           aria-controls="mobile-menu"
@@ -114,7 +114,7 @@ export function Header() {
         id="mobile-menu"
         aria-hidden={!mobileMenuOpen}
         className={`
-          fixed left-0 right-0 top-16 bg-white shadow-lg transition-all duration-300 ease-in-out md:hidden
+          fixed left-0 right-0 top-16 bg-white/95 shadow-lg backdrop-blur-xl transition-all duration-300 ease-in-out md:hidden
           ${mobileMenuOpen
             ? 'pointer-events-auto visible opacity-100'
             : 'pointer-events-none invisible opacity-0'
@@ -141,7 +141,7 @@ export function Header() {
                   ref={index === 0 ? firstLinkRef : null}
                   href={item.href}
                   role="menuitem"
-                  className="block min-h-[44px] rounded-lg px-4 py-3 text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
+                  className="block min-h-[44px] rounded-lg px-4 py-3 text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset"
                   onClick={closeMenu}
                 >
                   {item.label}
@@ -154,7 +154,7 @@ export function Header() {
                 target="_blank"
                 rel="noopener noreferrer"
                 role="menuitem"
-                className="mt-2 block min-h-[44px] rounded-lg bg-blue-600 px-4 py-3 text-center font-medium text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                className="mt-2 block min-h-[44px] rounded-lg bg-slate-900 px-4 py-3 text-center font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
               >
                 Get VPN
               </a>

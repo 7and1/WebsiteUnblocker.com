@@ -4,12 +4,12 @@ import { siteConfig } from '@/config/site'
 
 export function Footer() {
   return (
-    <footer className="border-t border-slate-100 bg-slate-50 px-4 py-12">
+    <footer className="border-t border-slate-200/70 bg-gradient-to-br from-slate-50 via-white to-emerald-50/40 px-4 py-14">
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-8 md:grid-cols-4">
           <div className="md:col-span-2">
-            <Link href="/" className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900">
-              <Shield className="h-6 w-6 text-blue-600" />
+            <Link href="/" className="mb-4 flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900">
+              <Shield className="h-6 w-6 text-emerald-600" />
               WebsiteUnblocker
             </Link>
             <p className="max-w-md text-sm text-slate-600">{siteConfig.description}</p>
@@ -20,7 +20,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               {siteConfig.footer.resources.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-slate-600 hover:text-blue-600">
+                  <Link href={item.href} className="text-slate-600 hover:text-emerald-600">
                     {item.label}
                   </Link>
                 </li>
@@ -33,7 +33,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               {siteConfig.footer.legal.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-slate-600 hover:text-blue-600">
+                  <Link href={item.href} className="text-slate-600 hover:text-emerald-600">
                     {item.label}
                   </Link>
                 </li>

@@ -37,8 +37,8 @@ export function DiagnosisTool({ defaultUrl = '' }: { defaultUrl?: string }) {
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
         <div className="p-6 md:p-8">
           <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2">
-              <Shield className="h-6 w-6 text-blue-600" />
+            <div className="rounded-lg bg-emerald-100 p-2">
+              <Shield className="h-6 w-6 text-emerald-600" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900">Website Access Checker</h2>

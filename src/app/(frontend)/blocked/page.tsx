@@ -31,7 +31,7 @@ export default function BlockedHubPage() {
             <Link
               key={item.slug}
               href={`/blocked/${item.slug}`}
-              className="rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-lg"
+              className="rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-emerald-200 hover:shadow-lg"
             >
               <h2 className="text-xl font-bold text-slate-900">
                 Is {item.site} blocked in {item.country}?
@@ -39,7 +39,7 @@ export default function BlockedHubPage() {
               <p className="mt-2 text-sm text-slate-500">
                 Current status: <span className="font-medium text-slate-700">{item.status}</span>
               </p>
-              <span className="mt-4 inline-flex text-sm font-medium text-blue-600">View status →</span>
+              <span className="mt-4 inline-flex text-sm font-medium text-emerald-600">View status →</span>
             </Link>
           ))}
         </div>

@@ -86,7 +86,7 @@ export function Breadcrumb({
                   <Link
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-1 hover:text-blue-600 transition-colors',
+                      'flex items-center gap-1 hover:text-emerald-600 transition-colors',
                       variant === 'minimal' ? 'text-slate-600' : 'text-slate-500',
                       index === 0 && 'text-slate-400 hover:text-slate-600'
                     )}

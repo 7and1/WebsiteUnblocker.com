@@ -156,7 +156,7 @@ export function RelatedPosts({
       {/* Browse all link */}
       <Link
         href="/blog"
-        className="inline-flex items-center mt-6 text-blue-600 hover:text-blue-700 font-medium text-sm"
+        className="inline-flex items-center mt-6 text-emerald-600 hover:text-emerald-700 font-medium text-sm"
       >
         Browse all guides →
       </Link>
@@ -218,7 +218,7 @@ export function RelatedPostsServer({
 
       <Link
         href="/blog"
-        className="inline-flex items-center mt-6 text-blue-600 hover:text-blue-700 font-medium text-sm"
+        className="inline-flex items-center mt-6 text-emerald-600 hover:text-emerald-700 font-medium text-sm"
       >
         Browse all guides →
       </Link>

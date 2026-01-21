@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation'
-import { SpeedTest, IpChecker } from '@/components'
+import { SpeedTest, IpChecker, ProxyRoutes } from '@/components'
 import { buildBreadcrumbSchema, buildMetadata } from '@/lib/seo'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { tools } from '@/lib/content'
 
 const TOOL_COMPONENTS: Record<string, React.ReactNode> = {
+  'proxy-routes': <ProxyRoutes />,
   'speed-test': <SpeedTest />,
   'ip-checker': <IpChecker />,
 }

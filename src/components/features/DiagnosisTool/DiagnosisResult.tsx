@@ -35,6 +35,7 @@ export function DiagnosisResult({ result }: { result: CheckResult }) {
   const summary = result.summary ?? computeSummary(regions)
   const hasRegionalBlocks = summary.blocked > 0
   const showSolutions = isBlocked || isError || hasRegionalBlocks
+  const showProxyRoutes = showSolutions || isAccessible
 
   return (
     <div className="space-y-6">
@@ -134,46 +135,57 @@ export function DiagnosisResult({ result }: { result: CheckResult }) {
         </div>
       )}
 
-      {showSolutions && (
+      {showProxyRoutes && (
         <div id="solutions" className="space-y-4">
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-            <p className="text-sm font-semibold text-red-800">Access denied in one or more networks.</p>
-            <p className="text-sm text-red-700">
-              Use a VPN for the fastest, most reliable access, or try one of the free proxy routes below.
-            </p>
-          </div>
-
-          <h3 className="font-semibold text-slate-700">Recommended Solutions</h3>
-
-          <a
-            href={siteConfig.affiliates.nordvpn}
-            target="_blank"
-            rel="noopener"
-            className="group flex items-center justify-between gap-4 rounded-xl border-2 border-green-500 bg-gradient-to-r from-green-50 to-emerald-50 p-5 transition-all hover:shadow-lg"
-          >
-            <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-green-500 p-3 text-white">
-                <Shield className="h-6 w-6" />
+          {showSolutions ? (
+            <>
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                <p className="text-sm font-semibold text-red-800">Access denied in one or more networks.</p>
+                <p className="text-sm text-red-700">
+                  Use a VPN for the fastest, most reliable access, or try one of the free proxy routes below.
+                </p>
               </div>
-              <div>
-                <div className="flex items-center gap-2 font-bold text-slate-800">
-                  NordVPN
-                  <span className="rounded-full bg-green-500 px-2 py-0.5 text-xs text-white">
-                    Recommended
-                  </span>
+
+              <h3 className="font-semibold text-slate-700">Recommended Solutions</h3>
+
+              <a
+                href={siteConfig.affiliates.nordvpn}
+                target="_blank"
+                rel="noopener"
+                className="group flex items-center justify-between gap-4 rounded-xl border-2 border-green-500 bg-gradient-to-r from-green-50 to-emerald-50 p-5 transition-all hover:shadow-lg"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="rounded-lg bg-green-500 p-3 text-white">
+                    <Shield className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 font-bold text-slate-800">
+                      NordVPN
+                      <span className="rounded-full bg-green-500 px-2 py-0.5 text-xs text-white">
+                        Recommended
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-600">Fastest VPN for streaming & gaming</p>
+                  </div>
                 </div>
-                <p className="text-sm text-slate-600">Fastest VPN for streaming & gaming</p>
-              </div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white transition-colors group-hover:bg-green-700">
+                    Unblock Now
+                  </span>
+                  <ExternalLink className="h-4 w-4 text-green-600" />
+                </div>
+              </a>
+            </>
+          ) : (
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <p className="text-sm font-semibold text-slate-700">Need a free proxy option?</p>
+              <p className="text-sm text-slate-500">
+                Use a web proxy for quick access when a VPN isn&apos;t required.
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white transition-colors group-hover:bg-green-700">
-                Unblock Now
-              </span>
-              <ExternalLink className="h-4 w-4 text-green-600" />
-            </div>
-          </a>
+          )}
 
-          <ProxyRoutes enabled={showSolutions} limit={10} />
+          <ProxyRoutes enabled={showProxyRoutes} limit={10} />
         </div>
       )}
     </div>

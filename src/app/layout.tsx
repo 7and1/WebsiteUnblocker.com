@@ -1,13 +1,20 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Manrope, Space_Grotesk } from 'next/font/google'
 import './globals.css'
 import { siteConfig } from '@/config/site'
 
 // Font optimization: Self-hosted with display swap for better CLS
-const inter = Inter({
+const bodyFont = Manrope({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-body',
+  preload: true,
+})
+
+const displayFont = Space_Grotesk({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-display',
   preload: true,
 })
 
@@ -101,7 +108,7 @@ const PRELOAD_RESOURCES = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${bodyFont.variable} ${displayFont.variable}`}>
       <head>
         {/* Performance: Preconnect to external domains */}
         {PRECONNECT_DOMAINS.map((domain) => (
@@ -122,7 +129,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         ))}
       </head>
-      <body className={`${inter.className} antialiased`}>{children}</body>
+      <body className={`${bodyFont.className} antialiased`}>{children}</body>
     </html>
   )
 }

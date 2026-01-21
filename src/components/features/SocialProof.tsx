@@ -14,7 +14,7 @@ const stats: StatItem[] = [
     icon: <Users className="h-6 w-6" />,
     value: '2.5M+',
     label: 'Monthly Users',
-    color: 'text-blue-500',
+    color: 'text-emerald-500',
   },
   {
     icon: <CheckCircle className="h-6 w-6" />,

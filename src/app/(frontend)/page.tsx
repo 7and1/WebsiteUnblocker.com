@@ -51,6 +51,22 @@ const CTABanner = dynamic(
   }
 )
 
+const ProxyRoutes = dynamic(
+  () => import('@/components/features/ProxyRoutes').then(m => ({ default: m.ProxyRoutes })),
+  {
+    loading: () => (
+      <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="h-5 w-40 rounded bg-slate-200 mb-4" />
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, idx) => (
+            <div key={idx} className="h-14 rounded-xl border border-slate-100 bg-slate-50 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    ),
+  }
+)
+
 import {
   buildMetadata,
   buildBreadcrumbSchema,
@@ -145,7 +161,12 @@ export default async function HomePage() {
 
   return (
     <ErrorBoundary>
-      <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <main className="relative min-h-screen bg-slate-50 text-slate-900">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -top-32 left-1/2 h-[460px] w-[460px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_center,_rgba(56,189,248,0.25),_transparent_60%)] blur-3xl" />
+          <div className="absolute top-16 right-[-140px] h-[380px] w-[380px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(52,211,153,0.25),_transparent_60%)] blur-3xl" />
+          <div className="absolute bottom-0 left-[-120px] h-[320px] w-[320px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(250,204,21,0.22),_transparent_60%)] blur-3xl" />
+        </div>
         <JsonLd data={breadcrumbSchema} />
         <JsonLd data={organizationSchema} />
         <JsonLd data={webSiteSchema} />
@@ -153,64 +174,123 @@ export default async function HomePage() {
         <JsonLd data={softwareSchema} />
 
         {/* Hero Section */}
-        <section className="pt-16 pb-24 px-4">
-          <div className="max-w-6xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-8">
-              <Shield className="w-4 h-4" />
-              Free Website Unblocker Tool
+        <section className="relative overflow-hidden pt-20 pb-24 px-4">
+          <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="text-left">
+              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm">
+                <Shield className="h-4 w-4 text-emerald-600" />
+                Free Website Unblocker Tool
+              </div>
+
+              <h1 className="mt-6 text-4xl font-extrabold leading-tight text-slate-900 md:text-6xl">
+                Check if websites are
+                <span className="text-emerald-600"> blocked</span>
+                <br />in your region
+              </h1>
+
+              <p className="mt-6 text-lg text-slate-600 md:text-xl">
+                Instantly diagnose accessibility issues and get tailored solutions
+                to unblock any website safely and securely.
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/blocked"
+                  className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800"
+                >
+                  Check blocked status
+                </Link>
+                <Link
+                  href="/unblock"
+                  className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900"
+                >
+                  Explore unblock guides
+                </Link>
+              </div>
+
+              <div className="mt-10 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
+                <div className="rounded-xl border border-slate-200/70 bg-white/80 px-4 py-3">
+                  Global checks
+                  <p className="mt-1 text-xs text-slate-500">Edge + regional probes</p>
+                </div>
+                <div className="rounded-xl border border-slate-200/70 bg-white/80 px-4 py-3">
+                  Smart routes
+                  <p className="mt-1 text-xs text-slate-500">Free proxy list updates</p>
+                </div>
+                <div className="rounded-xl border border-slate-200/70 bg-white/80 px-4 py-3">
+                  VPN picks
+                  <p className="mt-1 text-xs text-slate-500">Fast, reliable access</p>
+                </div>
+              </div>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
-              Check if Websites are
-              <span className="text-blue-600"> Blocked</span>
-              <br />in Your Region
-            </h1>
+            <div className="relative">
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-white via-white to-emerald-50/80 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.45)]" />
+              <div className="relative">
+                <ErrorBoundary>
+                  <DiagnosisTool />
+                </ErrorBoundary>
+              </div>
+            </div>
+          </div>
+        </section>
 
-            <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto">
-              Instantly diagnose website accessibility issues and get personalized solutions
-              to unblock any website safely and securely.
-            </p>
-
-            <ErrorBoundary>
-              <DiagnosisTool />
-            </ErrorBoundary>
+        {/* Proxy Routes Section */}
+        <section className="py-16 px-4 bg-white/70 border-y border-slate-200/60">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <h2 className="text-3xl font-bold text-slate-900">Free Proxy Routes</h2>
+              <p className="mt-2 max-w-2xl text-slate-600">
+                Live checks of popular free proxy services. Pick a route to open the proxy site in a new tab.
+              </p>
+            </div>
+            <ProxyRoutes />
           </div>
         </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-white border-y border-slate-100">
+      <section className="py-20 px-4 bg-white border-y border-slate-200/60">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-slate-900 mb-12">
-            Why Use Website Unblocker?
-          </h2>
+          <div className="mb-12 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">Why us</p>
+              <h2 className="mt-3 text-3xl font-bold text-slate-900">Why Use Website Unblocker?</h2>
+            </div>
+            <Link
+              href="/tools"
+              className="text-sm font-semibold text-slate-700 transition-colors hover:text-slate-900"
+            >
+              Explore tools →
+            </Link>
+          </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
-                <Globe className="w-6 h-6 text-blue-600" />
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="group rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-white to-slate-50 p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                <Globe className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Global Access</h3>
-              <p className="text-slate-600">
+              <h3 className="mt-4 text-xl font-bold text-slate-900">Global Access</h3>
+              <p className="mt-2 text-slate-600">
                 Access any website from anywhere in the world, bypassing geo-restrictions and censorship.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4">
-                <Zap className="w-6 h-6 text-green-600" />
+            <div className="group rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-white to-amber-50 p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                <Zap className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Instant Detection</h3>
-              <p className="text-slate-600">
+              <h3 className="mt-4 text-xl font-bold text-slate-900">Instant Detection</h3>
+              <p className="mt-2 text-slate-600">
                 Our tool instantly checks website accessibility from multiple locations worldwide.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
-                <Lock className="w-6 h-6 text-purple-600" />
+            <div className="group rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-white to-emerald-50 p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white">
+                <Lock className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Privacy First</h3>
-              <p className="text-slate-600">
+              <h3 className="mt-4 text-xl font-bold text-slate-900">Privacy First</h3>
+              <p className="mt-2 text-slate-600">
                 We recommend only trusted VPN solutions that protect your privacy and data.
               </p>
             </div>
@@ -228,7 +308,7 @@ export default async function HomePage() {
               </h2>
               <Link
                 href="/blog"
-                className="text-blue-600 font-medium flex items-center gap-2 hover:gap-3 transition-all"
+                className="text-emerald-600 font-medium flex items-center gap-2 hover:gap-3 transition-all"
               >
                 View All <ArrowRight className="w-4 h-4" />
               </Link>

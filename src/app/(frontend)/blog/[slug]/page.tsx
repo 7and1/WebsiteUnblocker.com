@@ -75,7 +75,7 @@ export default async function BlogPostPage({ params }: Props) {
           <article className="flex-1 min-w-0">
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 mb-8"
+              className="inline-flex items-center gap-2 text-slate-600 hover:text-emerald-600 mb-8"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Blog
@@ -86,7 +86,7 @@ export default async function BlogPostPage({ params }: Props) {
                 {post.tags?.map((tag: string) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full"
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full"
                   >
                     <Tag className="w-3 h-3" />
                     {tag}

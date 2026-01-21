@@ -115,7 +115,7 @@ export default function ComparePage() {
                 className={cn(
                   'px-4 py-2 rounded-lg font-medium transition-all',
                   selectedVPNs.includes(key)
-                    ? 'bg-blue-600 text-white shadow-md'
+                    ? 'bg-emerald-600 text-white shadow-md'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 )}
               >
@@ -198,15 +198,15 @@ export default function ComparePage() {
         <section className="mt-12">
           <h2 className="text-2xl font-bold text-slate-900 mb-6">Head-to-Head Comparisons</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link href="/compare/nordvpn-vs-expressvpn" className="rounded-xl border border-slate-200 p-4 hover:border-blue-200 hover:shadow-md transition-all">
+            <Link href="/compare/nordvpn-vs-expressvpn" className="rounded-xl border border-slate-200 p-4 hover:border-emerald-200 hover:shadow-md transition-all">
               <h3 className="font-semibold text-slate-900">NordVPN vs ExpressVPN</h3>
               <p className="text-sm text-slate-500 mt-1">Speed, streaming, and privacy</p>
             </Link>
-            <Link href="/compare/nordvpn-vs-surfshark" className="rounded-xl border border-slate-200 p-4 hover:border-blue-200 hover:shadow-md transition-all">
+            <Link href="/compare/nordvpn-vs-surfshark" className="rounded-xl border border-slate-200 p-4 hover:border-emerald-200 hover:shadow-md transition-all">
               <h3 className="font-semibold text-slate-900">NordVPN vs Surfshark</h3>
               <p className="text-sm text-slate-500 mt-1">Value vs premium features</p>
             </Link>
-            <Link href="/compare/expressvpn-vs-surfshark" className="rounded-xl border border-slate-200 p-4 hover:border-blue-200 hover:shadow-md transition-all">
+            <Link href="/compare/expressvpn-vs-surfshark" className="rounded-xl border border-slate-200 p-4 hover:border-emerald-200 hover:shadow-md transition-all">
               <h3 className="font-semibold text-slate-900">ExpressVPN vs Surfshark</h3>
               <p className="text-sm text-slate-500 mt-1">Premium vs budget-friendly</p>
             </Link>

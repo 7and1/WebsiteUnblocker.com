@@ -45,7 +45,7 @@ export function CTABanner({
                 href={affiliateUrl}
                 target="_blank"
                 rel="noopener"
-                className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-emerald-700"
               >
                 {buttonText}
               </a>
@@ -66,7 +66,7 @@ export function CTABanner({
             href={affiliateUrl}
             target="_blank"
             rel="noopener"
-            className="inline-flex items-center gap-2 rounded-xl bg-green-500 px-8 py-4 text-lg font-bold text-white transition-colors hover:bg-green-600"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-8 py-4 text-lg font-bold text-white transition-colors hover:bg-emerald-600"
           >
             <Shield className="h-5 w-5" />
             {buttonText}
@@ -79,7 +79,7 @@ export function CTABanner({
   return (
     <div
       className={cn(
-        'my-8 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6'
+        'my-8 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-amber-50 p-6'
       )}
     >
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
@@ -91,7 +91,7 @@ export function CTABanner({
           href={affiliateUrl}
           target="_blank"
           rel="noopener"
-          className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+          className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
         >
           {buttonText}
         </a>
