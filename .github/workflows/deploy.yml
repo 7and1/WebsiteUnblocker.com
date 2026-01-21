@@ -81,6 +81,38 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
+      - name: Create wrangler.toml
+        run: |
+          cat > wrangler.toml << 'EOF'
+          name = "websiteunblocker"
+          main = ".open-next/worker.js"
+          compatibility_date = "2025-01-18"
+          compatibility_flags = ["nodejs_compat"]
+          account_id = "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+
+          [assets]
+          directory = ".open-next/assets"
+          binding = "ASSETS"
+
+          [[d1_databases]]
+          binding = "D1"
+          database_name = "websiteunblocker-db"
+          database_id = "${{ secrets.D1_DATABASE_ID }}"
+
+          [[r2_buckets]]
+          binding = "R2"
+          bucket_name = "websiteunblocker-media"
+
+          [vars]
+          NODE_ENV = "production"
+          NEXT_PUBLIC_SERVER_URL = "https://websiteunblocker.com"
+
+          routes = [
+            { pattern = "websiteunblocker.com/*", zone_name = "websiteunblocker.com" },
+            { pattern = "www.websiteunblocker.com/*", zone_name = "websiteunblocker.com" }
+          ]
+          EOF
+
       - name: Build with OpenNext
         run: |
           export CLOUDFLARE_ACCOUNT_ID=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
