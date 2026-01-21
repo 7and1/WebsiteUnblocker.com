@@ -3,6 +3,7 @@ import configPromise from '@payload-config'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { ArrowRight, Globe, Lock, Shield, Zap } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 // Code splitting: dynamic imports for non-critical components
 // Each component is loaded in its own chunk, reducing initial bundle size
@@ -133,35 +134,38 @@ export default async function HomePage() {
   })
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <JsonLd data={breadcrumbSchema} />
-      <JsonLd data={organizationSchema} />
-      <JsonLd data={webSiteSchema} />
-      <JsonLd data={faqSchema} />
-      <JsonLd data={softwareSchema} />
+    <ErrorBoundary>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+        <JsonLd data={breadcrumbSchema} />
+        <JsonLd data={organizationSchema} />
+        <JsonLd data={webSiteSchema} />
+        <JsonLd data={faqSchema} />
+        <JsonLd data={softwareSchema} />
 
-      {/* Hero Section */}
-      <section className="pt-16 pb-24 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-8">
-            <Shield className="w-4 h-4" />
-            Free Website Unblocker Tool
+        {/* Hero Section */}
+        <section className="pt-16 pb-24 px-4">
+          <div className="max-w-6xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-8">
+              <Shield className="w-4 h-4" />
+              Free Website Unblocker Tool
+            </div>
+
+            <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
+              Check if Websites are
+              <span className="text-blue-600"> Blocked</span>
+              <br />in Your Region
+            </h1>
+
+            <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto">
+              Instantly diagnose website accessibility issues and get personalized solutions
+              to unblock any website safely and securely.
+            </p>
+
+            <ErrorBoundary>
+              <DiagnosisTool />
+            </ErrorBoundary>
           </div>
-
-          <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
-            Check if Websites are
-            <span className="text-blue-600"> Blocked</span>
-            <br />in Your Region
-          </h1>
-
-          <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto">
-            Instantly diagnose website accessibility issues and get personalized solutions
-            to unblock any website safely and securely.
-          </p>
-
-          <DiagnosisTool />
-        </div>
-      </section>
+        </section>
 
       {/* Features Section */}
       <section className="py-20 px-4 bg-white border-y border-slate-100">
@@ -244,5 +248,6 @@ export default async function HomePage() {
         affiliateKey="nordvpn"
       />
     </main>
+    </ErrorBoundary>
   )
 }

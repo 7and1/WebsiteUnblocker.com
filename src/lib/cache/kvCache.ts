@@ -10,6 +10,57 @@ declare global {
 }
 
 /**
+ * Simple Circuit Breaker for KV Cache operations
+ */
+interface KvCircuitBreakerState {
+  failureCount: number
+  lastFailureTime: number
+  state: 'closed' | 'open' | 'half-open'
+}
+
+const KV_CIRCUIT_BREAKER: KvCircuitBreakerState = {
+  failureCount: 0,
+  lastFailureTime: 0,
+  state: 'closed',
+}
+
+const KV_CIRCUIT_THRESHOLD = 5
+const KV_CIRCUIT_COOLDOWN_MS = 30_000
+
+function kvCircuitIsOpen(): boolean {
+  const now = Date.now()
+
+  if (KV_CIRCUIT_BREAKER.state === 'open') {
+    if (now - KV_CIRCUIT_BREAKER.lastFailureTime >= KV_CIRCUIT_COOLDOWN_MS) {
+      KV_CIRCUIT_BREAKER.state = 'half-open'
+      return false
+    }
+    return true
+  }
+
+  return false
+}
+
+function kvCircuitRecordSuccess(): void {
+  if (KV_CIRCUIT_BREAKER.state === 'half-open') {
+    KV_CIRCUIT_BREAKER.state = 'closed'
+    KV_CIRCUIT_BREAKER.failureCount = 0
+  }
+}
+
+function kvCircuitRecordFailure(): void {
+  KV_CIRCUIT_BREAKER.failureCount += 1
+  KV_CIRCUIT_BREAKER.lastFailureTime = Date.now()
+
+  if (
+    KV_CIRCUIT_BREAKER.state === 'half-open' ||
+    KV_CIRCUIT_BREAKER.failureCount >= KV_CIRCUIT_THRESHOLD
+  ) {
+    KV_CIRCUIT_BREAKER.state = 'open'
+  }
+}
+
+/**
  * KV Namespace type for Cloudflare Workers
  */
 export interface KVNamespace {
@@ -106,6 +157,11 @@ function buildCacheEntry<T>(data: T, metadata: CacheMetadata): string {
 export async function kvCache<T>({ key, ttl = 300, fetchFn, swrTtl }: KvCacheOptions<T>): Promise<T> {
   const now = Date.now()
 
+  // Circuit breaker: skip KV if circuit is open
+  if (kvCircuitIsOpen()) {
+    return fetchFn()
+  }
+
   try {
     const { env } = await getCloudflareContext({ async: true })
     const kv = env?.CACHE as KVNamespace | undefined
@@ -124,6 +180,7 @@ export async function kvCache<T>({ key, ttl = 300, fetchFn, swrTtl }: KvCacheOpt
 
     // Try to get from cache
     const cached = await kv.get(key, 'text')
+    kvCircuitRecordSuccess()
     const { data, metadata } = parseCacheEntry<T>(cached)
 
     // Check if cache is still valid (within TTL)
@@ -168,6 +225,8 @@ export async function kvCache<T>({ key, ttl = 300, fetchFn, swrTtl }: KvCacheOpt
 
     return fetchPromise
   } catch {
+    // Record failure for circuit breaker
+    kvCircuitRecordFailure()
     // On any error, fall back to direct fetch
     return fetchFn()
   }

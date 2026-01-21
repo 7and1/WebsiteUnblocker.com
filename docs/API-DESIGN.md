@@ -12,6 +12,7 @@
 - [Error Handling](#error-handling)
 - [Endpoints](#endpoints)
   - [GET /api/check](#get-apicheck)
+  - [GET /api/proxies](#get-apiproxies)
   - [GET /api/health](#get-apihealth)
   - [POST /api/contact](#post-apicontact)
   - [Payload CMS REST API](#payload-cms-rest-api)
@@ -128,6 +129,7 @@ Accept: application/json
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `url` | string | Yes | Website URL to check (with or without protocol) |
+| `mode` | string | No | Set to `multi` to include multi-region diagnostics |
 
 #### Response Schema
 
@@ -138,6 +140,13 @@ interface CheckResponse {
   latency: number    // Response time in milliseconds
   target: string     // Normalized URL that was checked
   error?: string     // Error message (only if blocked/error)
+  regions?: RegionCheckResult[]
+  summary?: {
+    accessible: number
+    blocked: number
+    error: number
+    unknown: number
+  }
 }
 ```
 
@@ -194,6 +203,9 @@ curl "https://websiteunblocker.com/api/check?url=youtube.com"
 
 # Check with full URL
 curl "https://websiteunblocker.com/api/check?url=https://twitter.com"
+
+# Multi-region diagnostics
+curl "https://websiteunblocker.com/api/check?url=youtube.com&mode=multi"
 ```
 
 ```typescript
@@ -218,6 +230,130 @@ if (data.status === 'accessible') {
 
 ---
 
+### GET /api/proxies
+
+Return a snapshot of available proxy routes and their current health.
+
+#### Request
+
+```http
+GET /api/proxies?limit=10 HTTP/1.1
+Host: websiteunblocker.com
+Accept: application/json
+```
+
+#### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `limit` | number | No | Number of routes to actively check (min 3, max 15). Defaults to 10. |
+
+#### Response Schema
+
+```typescript
+interface ProxyRoute {
+  id: string
+  name: string
+  url: string
+  region: string
+  status: 'online' | 'degraded' | 'offline' | 'unknown'
+  latency: number | null
+  checked: boolean
+  notes?: string
+}
+
+interface ProxySnapshotResponse {
+  checkedAt: string
+  ttl: number
+  routes: ProxyRoute[]
+}
+```
+
+#### Example Usage
+
+```bash
+curl "https://websiteunblocker.com/api/proxies?limit=10"
+```
+
+#### Response (200 OK)
+
+```json
+{
+  "checkedAt": "2025-01-19T12:00:00.000Z",
+  "ttl": 300,
+  "routes": [
+    {
+      "id": "us-west-1",
+      "name": "US West Proxy",
+      "url": "https://proxy1.websiteunblocker.com",
+      "region": "US West",
+      "status": "online",
+      "latency": 45,
+      "checked": true
+    },
+    {
+      "id": "eu-central-1",
+      "name": "EU Central Proxy",
+      "url": "https://proxy2.websiteunblocker.com",
+      "region": "EU Central",
+      "status": "degraded",
+      "latency": 250,
+      "checked": true,
+      "notes": "High latency"
+    }
+  ]
+}
+```
+
+---
+
+### GET /api/ip
+
+Get the client's IP address and geolocation information.
+
+#### Request
+
+```http
+GET /api/ip HTTP/1.1
+Host: websiteunblocker.com
+```
+
+#### Response (200 OK)
+
+```json
+{
+  "ip": "203.0.113.42",
+  "country": "US",
+  "city": "San Francisco",
+  "region": "California",
+  "timezone": "America/Los_Angeles",
+  "asn": 13335,
+  "asnOrg": "Cloudflare, Inc."
+}
+```
+
+#### Response Schema
+
+```typescript
+interface IpResponse {
+  ip: string
+  country?: string
+  city?: string
+  region?: string
+  timezone?: string
+  asn?: number
+  asnOrg?: string
+}
+```
+
+#### Example Usage
+
+```bash
+curl "https://websiteunblocker.com/api/ip"
+```
+
+---
+
 ### GET /api/health
 
 Health check endpoint for monitoring and load balancers.
@@ -235,7 +371,11 @@ Host: websiteunblocker.com
 {
   "status": "healthy",
   "timestamp": "2025-01-18T10:30:00.000Z",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "checks": {
+    "database": "ok",
+    "storage": "ok"
+  }
 }
 ```
 
@@ -1050,6 +1190,13 @@ export async function OPTIONS(request: Request) {
 ---
 
 ## Changelog
+
+### v1.1.0 (2025-01-19)
+
+- Added `/api/proxies` endpoint for proxy route snapshots
+- Added `/api/ip` endpoint for client IP detection
+- Added `summary` field to `/api/check` multi-region response
+- Enhanced health endpoint with database and storage checks
 
 ### v1.0.0 (2025-01-18)
 

@@ -22,6 +22,7 @@
 ├── /admin                  # Payload CMS admin
 └── /api                    # API routes
     ├── /api/check          # Website checker
+    ├── /api/proxies        # Proxy health snapshot
     ├── /api/health         # Health check
     └── /api/contact        # Contact form submission
 ```
@@ -202,6 +203,19 @@ interface CheckResponse {
   latency: number
   target: string
   error?: string
+  regions?: Array<{
+    region: string
+    label: string
+    status: 'accessible' | 'blocked' | 'error' | 'unknown'
+    latency: number | null
+    source?: 'edge' | 'globalping' | 'dns'
+  }>
+  summary?: {
+    accessible: number
+    blocked: number
+    error: number
+    unknown: number
+  }
 }
 
 // Rate limit: 100 requests/minute per IP
@@ -219,7 +233,41 @@ interface CheckResponse {
 
 ---
 
-### 2.2 Health Check `/api/health`
+### 2.2 Proxy Routes `/api/proxies`
+
+**File:** `src/app/api/proxies/route.ts`
+
+```typescript
+// GET /api/proxies?limit=10
+
+export const runtime = 'edge'
+
+interface ProxySnapshotResponse {
+  checkedAt: string
+  ttl: number
+  routes: Array<{
+    id: string
+    name: string
+    url: string
+    region: string
+    status: 'online' | 'degraded' | 'offline' | 'unknown'
+    latency: number | null
+    checked: boolean
+    notes?: string
+  }>
+}
+```
+
+**Response Codes:**
+| HTTP Status | Meaning |
+|-------------|---------|
+| 200 | Snapshot returned |
+| 429 | Rate limited |
+| 500 | Server error |
+
+---
+
+### 2.3 Health Check `/api/health`
 
 **File:** `src/app/api/health/route.ts`
 
@@ -241,7 +289,7 @@ interface HealthResponse {
 
 ---
 
-### 2.3 Contact Form `/api/contact`
+### 2.4 Contact Form `/api/contact`
 
 **File:** `src/app/api/contact/route.ts`
 

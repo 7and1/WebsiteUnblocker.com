@@ -3,14 +3,23 @@ import { rateLimit, rateLimitHeaders } from '@/lib/api/rateLimit'
 import { validateUrl, logValidationFailure } from '@/middleware/validation'
 import { getClientIp } from '@/lib/api/request'
 import { checkWebsite } from '@/services/WebsiteCheckService'
+import { checkMultiRegion } from '@/services/RegionCheckService'
 import { RateLimitError, BadRequestError } from '@/errors'
 import { generateRequestId, logger } from '@/lib/logger'
+import { kvCache } from '@/lib/cache/kvCache'
 
 // Cloudflare Workers compatible runtime
 export const dynamic = 'force-dynamic'
 
 // Maximum URL length to prevent abuse
 const MAX_URL_LENGTH = 2048
+
+// Cache TTL settings (in seconds)
+const CACHE_TTL = {
+  SINGLE_CHECK: 30, // 30 seconds for single checks
+  MULTI_CHECK: 60, // 1 minute for multi-region checks
+  SWR_TTL: 120, // 2 minutes stale-while-revalidate
+}
 
 /**
  * GET /api/check?url=example.com
@@ -22,6 +31,7 @@ export async function GET(request: Request) {
   const clientIp = getClientIp(request)
   const { searchParams } = new URL(request.url)
   const rawUrl = searchParams.get('url')
+  const mode = searchParams.get('mode')
 
   logger.info('Website check request', { requestId, url: rawUrl, ip: clientIp })
 
@@ -29,7 +39,7 @@ export async function GET(request: Request) {
   const rate = await rateLimit({ request, limit: 100, windowMs: 60_000, keyPrefix: 'check' })
   const baseHeaders = {
     ...rateLimitHeaders(rate),
-    'Cache-Control': 'no-store',
+    'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
     'X-Request-ID': requestId,
   }
 
@@ -88,9 +98,46 @@ export async function GET(request: Request) {
   }
 
   const targetUrl = urlValidation.sanitized!
+  const isMulti = mode === 'multi'
 
   try {
-    // Use service layer for website checking
+    // Generate cache key using hostname + path (base64 encoded, truncated)
+    const targetUrlObj = new URL(targetUrl)
+    const cacheKey = targetUrlObj.pathname === '/'
+      ? targetUrlObj.hostname
+      : `${targetUrlObj.hostname}:${btoa(targetUrlObj.pathname).slice(0, 16)}`
+
+    if (isMulti) {
+      const multiResult = await kvCache({
+        key: `check:multi:${cacheKey}`,
+        ttl: CACHE_TTL.MULTI_CHECK,
+        swrTtl: CACHE_TTL.SWR_TTL,
+        fetchFn: () => checkMultiRegion(targetUrl, { requestId }),
+      })
+
+      logger.info('Multi-region check completed', {
+        requestId,
+        targetUrl,
+        status: multiResult.edge.status,
+        latency: multiResult.edge.latency,
+        regions: multiResult.regions.length,
+      })
+
+      return NextResponse.json(
+        {
+          status: multiResult.edge.status,
+          code: multiResult.edge.code,
+          latency: multiResult.edge.latency,
+          target: multiResult.edge.target,
+          ...(multiResult.edge.blockReason && { blockReason: multiResult.edge.blockReason }),
+          ...(multiResult.edge.error && { error: multiResult.edge.error }),
+          regions: multiResult.regions,
+          summary: multiResult.summary,
+        },
+        { headers: baseHeaders }
+      )
+    }
+
     const result = await checkWebsite(targetUrl, {
       timeout: 5000,
       maxRetries: 1,
@@ -105,10 +152,11 @@ export async function GET(request: Request) {
       latency: result.latency,
     })
 
-    // Build response with rate limit headers
+    const publicStatus = result.isAccessible ? 'accessible' : result.status === 'blocked' ? 'blocked' : 'error'
+
     return NextResponse.json(
       {
-        status: result.isAccessible ? 'accessible' : result.status,
+        status: publicStatus,
         code: result.code,
         latency: result.latency,
         target: result.target,

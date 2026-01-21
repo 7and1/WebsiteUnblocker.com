@@ -1,12 +1,40 @@
-import { ExternalLink, Shield } from 'lucide-react'
-import { StatusBadge } from '@/components/ui'
+import { ExternalLink, Shield, Zap } from 'lucide-react'
+import { Badge, StatusBadge } from '@/components/ui'
 import { siteConfig } from '@/config/site'
+import { ProxyRoutes } from '@/components/features/ProxyRoutes'
 import type { CheckResult } from './types'
+
+const regionStatusMeta: Record<
+  'accessible' | 'blocked' | 'error' | 'unknown',
+  { label: string; variant: 'success' | 'warning' | 'error' | 'default' }
+> = {
+  accessible: { label: 'Accessible', variant: 'success' },
+  blocked: { label: 'Blocked', variant: 'error' },
+  error: { label: 'Error', variant: 'warning' },
+  unknown: { label: 'No data', variant: 'default' },
+}
+
+function computeSummary(regions: CheckResult['regions']) {
+  if (!regions || regions.length === 0) {
+    return { accessible: 0, blocked: 0, error: 0, unknown: 0 }
+  }
+  return regions.reduce(
+    (acc, region) => {
+      acc[region.status] += 1
+      return acc
+    },
+    { accessible: 0, blocked: 0, error: 0, unknown: 0 }
+  )
+}
 
 export function DiagnosisResult({ result }: { result: CheckResult }) {
   const isBlocked = result.status === 'blocked'
   const isError = result.status === 'error'
   const isAccessible = result.status === 'accessible'
+  const regions = result.regions ?? []
+  const summary = result.summary ?? computeSummary(regions)
+  const hasRegionalBlocks = summary.blocked > 0
+  const showSolutions = isBlocked || isError || hasRegionalBlocks
 
   return (
     <div className="space-y-6">
@@ -33,7 +61,69 @@ export function DiagnosisResult({ result }: { result: CheckResult }) {
           {result.code ? ` · HTTP ${result.code}` : ''}
         </p>
         {result.error && <p className="mt-2 text-sm text-slate-500">{result.error}</p>}
+
+        {/* Instant CTA for blocked status */}
+        {isBlocked && (
+          <div className="mt-4 flex flex-wrap gap-3">
+            <a
+              href={siteConfig.affiliates.nordvpn}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700"
+            >
+              <Zap className="h-4 w-4" />
+              Unblock with VPN
+            </a>
+            <a
+              href="#solutions"
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              View All Solutions
+            </a>
+          </div>
+        )}
       </div>
+
+      {regions.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm text-slate-500">Regional access report</p>
+              <h3 className="text-lg font-semibold text-slate-900">Multi-location results</h3>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+              <span>Accessible: {summary.accessible}</span>
+              <span>Blocked: {summary.blocked}</span>
+              <span>Errors: {summary.error}</span>
+              <span>Unknown: {summary.unknown}</span>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {regions.map((region) => {
+              const meta = regionStatusMeta[region.status]
+              return (
+                <div
+                  key={`${region.region}-${region.label}`}
+                  className="rounded-xl border border-slate-100 bg-slate-50 p-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-400">{region.label}</p>
+                      <p className="text-sm font-semibold text-slate-800">{region.source?.toUpperCase() ?? 'EDGE'}</p>
+                    </div>
+                    <Badge variant={meta.variant}>{meta.label}</Badge>
+                  </div>
+                  <div className="mt-2 text-xs text-slate-500">
+                    {region.latency ? `${region.latency}ms` : 'Latency unavailable'}
+                    {region.code ? ` · HTTP ${region.code}` : ''}
+                  </div>
+                  {region.details && <p className="mt-1 text-xs text-slate-400">{region.details}</p>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {isAccessible && (
         <div className="text-center text-slate-600">
@@ -44,8 +134,15 @@ export function DiagnosisResult({ result }: { result: CheckResult }) {
         </div>
       )}
 
-      {(isBlocked || isError) && (
-        <div className="space-y-4">
+      {showSolutions && (
+        <div id="solutions" className="space-y-4">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p className="text-sm font-semibold text-red-800">Access denied in one or more networks.</p>
+            <p className="text-sm text-red-700">
+              Use a VPN for the fastest, most reliable access, or try one of the free proxy routes below.
+            </p>
+          </div>
+
           <h3 className="font-semibold text-slate-700">Recommended Solutions</h3>
 
           <a
@@ -76,23 +173,7 @@ export function DiagnosisResult({ result }: { result: CheckResult }) {
             </div>
           </a>
 
-          <a
-            href="https://www.croxyproxy.com"
-            target="_blank"
-            rel="nofollow noopener"
-            className="flex items-center justify-between rounded-xl border border-slate-200 p-4 text-slate-500 transition-colors hover:bg-slate-50"
-          >
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-slate-100 p-2">
-                <ExternalLink className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="font-medium text-slate-700">Free Web Proxy</div>
-                <div className="text-xs">Slower speed, contains ads</div>
-              </div>
-            </div>
-            <span className="text-sm">Try Free →</span>
-          </a>
+          <ProxyRoutes enabled={showSolutions} limit={10} />
         </div>
       )}
     </div>

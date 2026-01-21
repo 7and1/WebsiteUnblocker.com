@@ -153,14 +153,24 @@ websiteunblocker.com/
 │   ├── middleware.ts             # Next.js middleware
 │   └── payload.config.ts         # Payload CMS configuration
 ├── docs/
+│   ├── INDEX.md                  # Documentation index
 │   ├── ARCHITECTURE.md           # System architecture
-│   ├── API.md                    # API documentation
+│   ├── API.md                    # API quick reference
+│   ├── API-DESIGN.md             # Detailed API documentation
 │   ├── COMPONENTS.md             # Component specifications
 │   ├── SEO-GUIDE.md              # SEO implementation guide
 │   ├── DEPLOYMENT.md             # Deployment guide
+│   ├── CLOUDFLARE-SETUP.md       # Cloudflare resources setup
+│   ├── ENVIRONMENT.md            # Environment variables reference
+│   ├── TROUBLESHOOTING.md        # Common issues and solutions
 │   ├── SETUP.md                  # Environment setup guide
 │   ├── MAINTENANCE.md            # Maintenance runbook
 │   └── TESTING.md                # Testing strategy
+├── scripts/                      # Operational scripts
+│   ├── deploy.sh                 # Deployment script
+│   ├── backup.sh                 # Database backup
+│   ├── health-check.sh           # Health monitoring
+│   └── rollback.sh               # Rollback script
 ├── public/                       # Static assets
 ├── wrangler.jsonc                # Cloudflare configuration
 ├── payload.config.ts             # Payload configuration
@@ -171,6 +181,8 @@ websiteunblocker.com/
 
 ## Available Scripts
 
+### Development
+
 | Script | Description |
 |--------|-------------|
 | `pnpm dev` | Start development server |
@@ -178,14 +190,30 @@ websiteunblocker.com/
 | `pnpm build` | Build for production |
 | `pnpm start` | Start production server |
 | `pnpm lint` | Run ESLint |
-| `pnpm generate:types` | Generate all TypeScript types |
-| `pnpm generate:importmap` | Generate Payload import map |
+| `pnpm typecheck` | Run TypeScript type checking |
+
+### Deployment
+
+| Script | Description |
+|--------|-------------|
 | `pnpm deploy` | Deploy using automated script |
+| `pnpm deploy:app` | Build and deploy application only |
+| `pnpm deploy:database` | Run database migrations |
 | `pnpm backup` | Backup database to R2 |
+| `pnpm rollback` | Rollback to previous deployment |
+| `pnpm health` | Run health checks |
 | `pnpm preview` | Preview deployment locally |
+
+### Testing & Generation
+
+| Script | Description |
+|--------|-------------|
 | `pnpm test` | Run all tests |
 | `pnpm test:unit` | Run unit tests only |
 | `pnpm test:e2e` | Run E2E tests with Playwright |
+| `pnpm test:watch` | Run tests in watch mode |
+| `pnpm generate:types` | Generate all TypeScript types |
+| `pnpm generate:importmap` | Generate Payload import map |
 
 ## Environment Variables
 
@@ -357,7 +385,10 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Support
 
-- Documentation: [docs/](docs/)
+- Documentation: [docs/INDEX.md](docs/INDEX.md) - Complete documentation index
+- Deployment Guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+- Environment Setup: [docs/CLOUDFLARE-SETUP.md](docs/CLOUDFLARE-SETUP.md)
+- Troubleshooting: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 - Issues: GitHub Issues
 - Contact: support@websiteunblocker.com
 

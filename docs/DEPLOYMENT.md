@@ -4,6 +4,23 @@
 
 ---
 
+## Table of Contents
+
+1. [Quick Start](#quick-start)
+2. [Environment Setup](#1-environment-setup)
+3. [Local Development](#2-local-development)
+4. [Deployment Process](#3-deployment-process)
+5. [CI/CD Pipeline](#4-cicd-pipeline-github-actions)
+6. [Database Operations](#5-database-operations)
+7. [Monitoring & Alerts](#6-monitoring--alerts)
+8. [Rollback Procedure](#7-rollback-procedure)
+9. [Domain & DNS](#8-domain--dns)
+10. [Security Checklist](#9-security-checklist)
+11. [Cost Estimation](#10-cost-estimation)
+12. [Troubleshooting](#11-troubleshooting)
+
+---
+
 ## Quick Start
 
 ```bash
@@ -15,6 +32,9 @@
 
 # Skip tests during deployment
 SKIP_TESTS=true ./scripts/deploy.sh production
+
+# Dry run (preview without executing)
+DRY_RUN=true ./scripts/deploy.sh production
 ```
 
 ---
@@ -63,6 +83,8 @@ Update `wrangler.jsonc` with your D1 database ID:
 | `CLOUDFLARE_ENV` | Environment name (staging/production) | Yes | `production` |
 | `NEXT_PUBLIC_SERVER_URL` | Public site URL | Yes | `https://websiteunblocker.com` |
 | `NODE_ENV` | Node environment | Yes | `production` |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID | CI/CD | From dashboard |
+| `CLOUDFLARE_API_TOKEN` | API token with proper permissions | CI/CD | Create in dashboard |
 
 ### 1.3 Secrets Management
 
@@ -160,9 +182,124 @@ CLOUDFLARE_ENV=production pnpm run preview
 
 ---
 
-## 3. CI/CD Pipeline (GitHub Actions)
+## 3. Deployment Process
 
-### 3.1 Full Workflow YAML
+### 3.1 Complete Deployment Flow
+
+The deployment script (`scripts/deploy.sh`) executes the following steps:
+
+```
+1. Pre-deployment Checklist
+   - Verify git status (uncommitted changes warning)
+   - Check current branch (production deployments should be from main)
+   - Validate required files exist
+   - Check disk space
+
+2. Prerequisites Check
+   - Node.js 18+ installed
+   - pnpm installed
+   - wrangler installed and authenticated
+
+3. Cloudflare Resources Validation
+   - D1 database exists
+   - R2 bucket exists
+
+4. Run Tests (optional, skip with SKIP_TESTS=true)
+   - Unit tests
+
+5. Create Backup (optional, skip with SKIP_BACKUP=true)
+   - Backup wrangler config and .dev.vars
+   - Keep last 10 backups
+
+6. Database Migrations
+   - Run Payload CMS migrations
+   - Optimize D1 database
+
+7. Build Application
+   - Generate TypeScript types
+   - Build with OpenNext for Cloudflare
+
+8. Deploy to Cloudflare Pages
+   - Deploy via opennextjs-cloudflare
+
+9. Health Check
+   - Verify /api/health endpoint
+   - Exponential backoff retries
+
+10. Post-deployment Verification
+    - Homepage accessibility
+    - Admin panel accessibility
+    - API health status
+    - Response time check
+    - SSL certificate validation
+```
+
+### 3.2 Manual Deployment Steps
+
+If you need to deploy manually:
+
+```bash
+# Step 1: Install dependencies
+pnpm install
+
+# Step 2: Generate types
+pnpm run generate:types
+
+# Step 3: Run migrations
+CLOUDFLARE_ENV=production NODE_ENV=production PAYLOAD_SECRET=ignore pnpm payload migrate
+
+# Step 4: Build
+CLOUDFLARE_ENV=production NODE_OPTIONS="--no-deprecation --max-old-space-size=8000" opennextjs-cloudflare build
+
+# Step 5: Deploy
+CLOUDFLARE_ENV=production opennextjs-cloudflare deploy
+
+# Step 6: Verify
+./scripts/health-check.sh production
+```
+
+### 3.3 Deployment Script Options
+
+```bash
+# Standard deployment
+./scripts/deploy.sh production
+
+# Staging deployment
+./scripts/deploy.sh staging
+
+# Skip tests (faster deployment)
+SKIP_TESTS=true ./scripts/deploy.sh production
+
+# Skip backup creation
+SKIP_BACKUP=true ./scripts/deploy.sh production
+
+# Dry run (show what would happen)
+DRY_RUN=true ./scripts/deploy.sh production
+
+# Debug mode (verbose output)
+DEBUG=true ./scripts/deploy.sh production
+
+# Combined options
+SKIP_TESTS=true SKIP_BACKUP=true ./scripts/deploy.sh production
+```
+
+### 3.4 Pre-deployment Checklist (Manual)
+
+Before deploying, ensure:
+
+- [ ] All changes committed to git
+- [ ] On correct branch (main for production)
+- [ ] Tests pass locally: `pnpm run test:unit`
+- [ ] Build succeeds locally: `pnpm run build`
+- [ ] Wrangler authenticated: `wrangler whoami`
+- [ ] Environment variables set in Cloudflare
+- [ ] Database migrations tested on staging first
+
+---
+
+## 4. CI/CD Pipeline (GitHub Actions)
+
+### 4.1 Full Workflow YAML
 
 Create `.github/workflows/deploy.yml`:
 
@@ -444,9 +581,9 @@ jobs:
 
 ---
 
-## 5. Monitoring & Alerts
+## 6. Monitoring & Alerts
 
-### 5.1 Cloudflare Analytics
+### 6.1 Cloudflare Analytics
 
 Access via Cloudflare Dashboard > Workers & Pages > websiteunblocker > Analytics
 
@@ -456,7 +593,7 @@ Access via Cloudflare Dashboard > Workers & Pages > websiteunblocker > Analytics
 - Duration (p50, p99)
 - Error rate
 
-### 5.2 Error Tracking Setup
+### 6.2 Error Tracking Setup
 
 **Option A: Sentry (Recommended)**
 
@@ -482,7 +619,7 @@ Enable in Dashboard > Analytics > Logpush > Create Job:
 - Select "Workers Trace Events"
 - Destination: R2 bucket or external service
 
-### 5.3 Performance Monitoring
+### 6.3 Performance Monitoring
 
 **Cloudflare Workers Analytics**:
 - Dashboard > Workers & Pages > Analytics
@@ -506,9 +643,44 @@ export async function GET(request: Request) {
 
 ---
 
-## 6. Rollback Procedure
+## 7. Rollback Procedure
 
-### 6.1 Deployment Rollback
+### 7.1 Using the Rollback Script
+
+The rollback script (`scripts/rollback.sh`) provides automated rollback with verification.
+
+```bash
+# Rollback to previous successful deployment
+./scripts/rollback.sh production
+
+# List available deployments
+./scripts/rollback.sh production --list
+
+# Rollback to specific deployment
+./scripts/rollback.sh production --deployment-id abc123def456
+
+# Skip confirmation prompt
+./scripts/rollback.sh production --force
+
+# Dry run (preview without executing)
+./scripts/rollback.sh production --dry-run
+```
+
+### 7.2 Rollback Flow
+
+The rollback script performs:
+
+1. **Validate environment** - Ensure valid environment name
+2. **Check prerequisites** - Verify wrangler and jq installed
+3. **Fetch deployments** - Get list of recent deployments
+4. **Select target** - Auto-select previous successful or use specified ID
+5. **Confirm rollback** - Prompt for confirmation (unless --force)
+6. **Execute rollback** - Run wrangler pages deployment rollback
+7. **Health check** - Verify site is responding after rollback
+8. **Verification** - Check homepage, API, and admin panel
+9. **Database instructions** - Provide manual database rollback steps
+
+### 7.3 Manual Deployment Rollback
 
 **Via Cloudflare Dashboard**:
 1. Go to Workers & Pages > websiteunblocker > Deployments
@@ -525,33 +697,72 @@ wrangler pages deployment list --project-name=websiteunblocker
 wrangler pages deployment rollback --deployment-id=DEPLOYMENT_ID --project-name=websiteunblocker
 ```
 
-### 6.2 Database Rollback
+### 7.4 Database Rollback
 
-**Restore from backup**:
+Database rollback requires manual intervention. Options:
+
+**Option A: Restore from R2 Backup**
 
 ```bash
-# Download backup from R2
-wrangler r2 object get websiteunblocker-media/backups/backup_20250118_020000.sql --file=restore.sql --env=production
+# 1. List available backups
+wrangler r2 object list websiteunblocker-media/backups --env=production
 
-# Drop and recreate tables (DANGEROUS - backup first!)
+# 2. Download the backup
+wrangler r2 object get websiteunblocker-media/backups/backup_20250118_020000.sql \
+  --file=restore.sql --env=production
+
+# 3. Restore (CAUTION: This overwrites existing data)
 wrangler d1 execute D1 --env=production --remote --file=restore.sql
 ```
 
-**Point-in-time recovery** (D1 Time Travel):
+**Option B: D1 Time Travel (Point-in-time Recovery)**
 
 ```bash
-# List available bookmarks
+# List available recovery points
 wrangler d1 time-travel info D1 --env=production
 
 # Restore to specific timestamp
 wrangler d1 time-travel restore D1 --timestamp=2025-01-17T12:00:00Z --env=production
 ```
 
+**Option C: Via Cloudflare Dashboard**
+
+1. Go to Workers & Pages > D1 > websiteunblocker-db
+2. Click Settings > Restore from backup
+3. Select the backup or timestamp to restore
+
+### 7.5 Rollback Verification
+
+After rollback, verify the deployment:
+
+```bash
+# Run health check
+./scripts/health-check.sh production
+
+# Or check manually
+curl -s https://websiteunblocker.com/api/health | jq
+curl -s -o /dev/null -w "%{http_code}" https://websiteunblocker.com
+```
+
+### 7.6 Emergency Rollback
+
+For critical issues requiring immediate rollback:
+
+```bash
+# Quick rollback (skip confirmation, auto-select previous deployment)
+./scripts/rollback.sh production --force
+
+# Or via wrangler directly
+wrangler pages deployment list --project-name=websiteunblocker --json | \
+  jq -r '[.[] | select(.latest_stage.name == "success")][1].id' | \
+  xargs -I {} wrangler pages deployment rollback --deployment-id={} --project-name=websiteunblocker
+```
+
 ---
 
-## 7. Domain & DNS
+## 8. Domain & DNS
 
-### 7.1 Cloudflare DNS Setup
+### 8.1 Cloudflare DNS Setup
 
 1. **Add domain to Cloudflare**:
    - Dashboard > Websites > Add a Site
@@ -569,7 +780,7 @@ wrangler d1 time-travel restore D1 --timestamp=2025-01-17T12:00:00Z --env=produc
    - Add `websiteunblocker.com`
    - Add `www.websiteunblocker.com`
 
-### 7.2 SSL Configuration
+### 8.2 SSL Configuration
 
 SSL is automatic with Cloudflare Proxy enabled.
 
@@ -577,7 +788,7 @@ SSL is automatic with Cloudflare Proxy enabled.
 - Dashboard > SSL/TLS > Overview > Full (strict)
 - Dashboard > SSL/TLS > Edge Certificates > Always Use HTTPS: ON
 
-### 7.3 Redirect Rules (www to non-www)
+### 8.3 Redirect Rules (www to non-www)
 
 **Create redirect rule**:
 - Dashboard > Rules > Redirect Rules > Create Rule
@@ -599,9 +810,9 @@ https://www.websiteunblocker.com/* https://websiteunblocker.com/:splat 301
 
 ---
 
-## 8. Security Checklist
+## 9. Security Checklist
 
-### 8.1 Security Headers
+### 9.1 Security Headers
 
 Create `src/middleware.ts`:
 
@@ -647,7 +858,7 @@ export const config = {
 }
 ```
 
-### 8.2 Rate Limiting
+### 9.2 Rate Limiting
 
 **Cloudflare Rate Limiting Rules**:
 - Dashboard > Security > WAF > Rate limiting rules
@@ -660,7 +871,7 @@ export const config = {
 - Requests: 20
 - Action: Block for 60 seconds
 
-### 8.3 Bot Protection
+### 9.3 Bot Protection
 
 **Enable Bot Fight Mode**:
 - Dashboard > Security > Bots > Bot Fight Mode: ON
@@ -674,7 +885,7 @@ Expression: (cf.client.bot) and not (cf.bot_management.verified_bot)
 Action: Block
 ```
 
-### 8.4 Security Checklist Summary
+### 9.4 Security Checklist Summary
 
 - [ ] PAYLOAD_SECRET is unique per environment (32+ chars)
 - [ ] SSL/TLS set to Full (strict)
@@ -689,9 +900,9 @@ Action: Block
 
 ---
 
-## 9. Cost Estimation
+## 10. Cost Estimation
 
-### 9.1 Cloudflare Free Tier Limits
+### 10.1 Cloudflare Free Tier Limits
 
 | Resource | Free Tier | Overage Cost |
 |----------|-----------|--------------|
@@ -706,7 +917,7 @@ Action: Block
 | Pages Builds | 500/month | N/A |
 | Pages Bandwidth | Unlimited | Free |
 
-### 9.2 Paid Tier Triggers
+### 10.2 Paid Tier Triggers
 
 You will need a paid plan ($5/month Workers Paid) when:
 - More than 100K requests/day
@@ -714,7 +925,7 @@ You will need a paid plan ($5/month Workers Paid) when:
 - D1 writes exceed 100K/day
 - R2 storage exceeds 10GB
 
-### 9.3 Monthly Cost Projection
+### 10.3 Monthly Cost Projection
 
 **Low Traffic (< 10K visits/month)**:
 - Workers: Free tier
@@ -735,13 +946,127 @@ You will need a paid plan ($5/month Workers Paid) when:
 - R2: ~$2-5/month
 - **Total: $15-30/month**
 
-### 9.4 Cost Optimization Tips
+### 10.4 Cost Optimization Tips
 
 1. **Cache aggressively**: Use Cloudflare cache for static assets
 2. **Minimize D1 writes**: Batch operations where possible
 3. **Compress images**: Reduce R2 storage and bandwidth
 4. **Use KV for reads**: Move read-heavy data to Workers KV
 5. **Monitor usage**: Set up billing alerts in Cloudflare Dashboard
+
+---
+
+## 11. Troubleshooting
+
+### 11.1 Common Deployment Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Build fails with memory error | Insufficient heap space | Increase `--max-old-space-size=8000` in NODE_OPTIONS |
+| D1 connection refused | Wrong database_id in wrangler.jsonc | Verify `database_id` matches output of `wrangler d1 list` |
+| R2 upload fails | Bucket doesn't exist or wrong binding | Run `wrangler r2 bucket list` and verify bucket name |
+| Migrations not running | Missing PAYLOAD_SECRET | Set `PAYLOAD_SECRET=ignore` for migrate command |
+| Wrangler not authenticated | Token expired | Run `wrangler login` to re-authenticate |
+| Deploy timeout | Large build or slow network | Retry deployment, check network stability |
+
+### 11.2 Health Check Failures
+
+```bash
+# Run detailed health check
+./scripts/health-check.sh production
+
+# Check specific endpoint
+curl -v https://websiteunblocker.com/api/health
+
+# Check DNS resolution
+dig websiteunblocker.com
+
+# Check SSL certificate
+echo | openssl s_client -servername websiteunblocker.com -connect websiteunblocker.com:443 2>/dev/null | openssl x509 -noout -dates
+```
+
+### 11.3 Application Errors
+
+**500 Internal Server Error**:
+```bash
+# Check live logs
+wrangler tail websiteunblocker --env=production
+
+# Check if admin panel works
+curl -v https://websiteunblocker.com/admin
+```
+
+**Admin Panel Not Loading**:
+```bash
+# Regenerate import map
+pnpm run generate:importmap
+
+# Regenerate types
+pnpm run generate:types
+
+# Rebuild and redeploy
+./scripts/deploy.sh production
+```
+
+**Database Errors**:
+```bash
+# Test database connection
+wrangler d1 execute D1 --env=production --remote --command "SELECT 1"
+
+# Check migration status
+wrangler d1 execute D1 --env=production --remote --command "SELECT * FROM payload_migrations"
+
+# Run pending migrations
+CLOUDFLARE_ENV=production NODE_ENV=production PAYLOAD_SECRET=ignore pnpm payload migrate
+```
+
+### 11.4 Performance Issues
+
+**Slow Response Times**:
+```bash
+# Check response time
+curl -w "Time: %{time_total}s\n" -o /dev/null -s https://websiteunblocker.com
+
+# Check Cloudflare analytics for CPU time
+# Dashboard > Workers & Pages > websiteunblocker > Analytics
+```
+
+**High CPU Usage**:
+- Review recent code changes
+- Check for infinite loops or heavy computations
+- Consider caching expensive operations
+
+### 11.5 Rollback Failures
+
+```bash
+# If rollback script fails, use wrangler directly
+wrangler pages deployment list --project-name=websiteunblocker --json | jq '.[].id'
+
+# Rollback to specific deployment
+wrangler pages deployment rollback --deployment-id=DEPLOYMENT_ID --project-name=websiteunblocker
+```
+
+### 11.6 Debug Mode
+
+Enable debug output for detailed troubleshooting:
+
+```bash
+# Deploy with debug mode
+DEBUG=true ./scripts/deploy.sh production
+
+# Health check with verbose output
+./scripts/health-check.sh production 2>&1 | tee health-check.log
+
+# Rollback with debug
+DEBUG=true ./scripts/rollback.sh production --dry-run
+```
+
+### 11.7 Getting Help
+
+1. Check Cloudflare status: https://www.cloudflarestatus.com/
+2. Review Cloudflare Workers logs in dashboard
+3. Check GitHub Actions workflow logs for CI/CD issues
+4. Consult [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for more detailed guides
 
 ---
 
@@ -755,15 +1080,23 @@ pnpm run devsafe                          # Clean start dev server
 pnpm run generate:types                   # Generate types
 
 # Deployment
-CLOUDFLARE_ENV=staging pnpm run deploy    # Deploy to staging
-CLOUDFLARE_ENV=production pnpm run deploy # Deploy to production
+./scripts/deploy.sh production            # Full deployment
+./scripts/deploy.sh staging               # Staging deployment
+DRY_RUN=true ./scripts/deploy.sh prod     # Preview deployment
+
+# Health & Monitoring
+./scripts/health-check.sh production      # Run health checks
+./scripts/health-check.sh prod --json     # JSON output for monitoring
+wrangler tail websiteunblocker --env=prod # Live logs
+
+# Rollback
+./scripts/rollback.sh production          # Rollback to previous
+./scripts/rollback.sh prod --list         # List deployments
+./scripts/rollback.sh prod --force        # Emergency rollback
 
 # Database
 pnpm payload migrate                      # Run migrations locally
 pnpm payload migrate:create name          # Create new migration
-
-# Debugging
-wrangler tail websiteunblocker --env=production  # Live logs
 wrangler d1 execute D1 --env=production --remote --command "SELECT 1"
 
 # Backup
@@ -772,17 +1105,23 @@ wrangler d1 export D1 --env=production --remote --output=backup.sql
 
 ---
 
-## Troubleshooting
+## Operational Scripts Summary
 
-| Issue | Solution |
-|-------|----------|
-| Build fails with memory error | Increase `--max-old-space-size=8000` |
-| D1 connection refused | Check `wrangler.jsonc` database_id matches |
-| R2 upload fails | Verify bucket exists and binding name matches |
-| Migrations not running | Ensure `PAYLOAD_SECRET` is set (can be `ignore` for migrate) |
-| Hot reload not working | Run `pnpm run devsafe` to clear cache |
-| Admin panel 500 error | Check `pnpm run generate:importmap` |
+| Script | Purpose | Common Usage |
+|--------|---------|--------------|
+| `scripts/deploy.sh` | Full deployment pipeline | `./scripts/deploy.sh production` |
+| `scripts/health-check.sh` | Verify deployment health | `./scripts/health-check.sh production` |
+| `scripts/rollback.sh` | Rollback to previous version | `./scripts/rollback.sh production` |
 
 ---
 
-Last updated: 2025-01-18
+## Related Documentation
+
+- [Environment Variables Reference](./ENVIRONMENT.md) - Complete environment variable guide
+- [Troubleshooting Guide](./TROUBLESHOOTING.md) - Detailed issue resolution
+- [Cloudflare Setup](./CLOUDFLARE-SETUP.md) - Cloudflare configuration
+- [API Documentation](./API-DESIGN.md) - API endpoints and usage
+
+---
+
+Last updated: 2025-01-21

@@ -1,4 +1,15 @@
 export type CheckStatus = 'accessible' | 'blocked' | 'error'
+export type RegionCheckStatus = 'accessible' | 'blocked' | 'error' | 'unknown'
+
+export interface RegionCheckResult {
+  region: string
+  label: string
+  status: RegionCheckStatus
+  latency: number | null
+  code?: number
+  source?: 'edge' | 'globalping' | 'dns'
+  details?: string
+}
 
 export interface CheckResult {
   status: CheckStatus
@@ -6,6 +17,14 @@ export interface CheckResult {
   latency: number
   target: string
   error?: string
+  blockReason?: string
+  regions?: RegionCheckResult[]
+  summary?: {
+    accessible: number
+    blocked: number
+    error: number
+    unknown: number
+  }
 }
 
 export interface DiagnosisState {

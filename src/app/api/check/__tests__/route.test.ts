@@ -27,6 +27,22 @@ vi.mock('@/services/WebsiteCheckService', () => ({
   }),
 }))
 
+vi.mock('@/services/RegionCheckService', () => ({
+  checkMultiRegion: vi.fn(async (url: string) => ({
+    edge: {
+      status: 'accessible',
+      code: 200,
+      latency: 80,
+      target: url,
+    },
+    regions: [
+      { region: 'edge', label: 'Edge (closest)', status: 'accessible', latency: 80, source: 'edge' },
+      { region: 'us', label: 'United States', status: 'accessible', latency: 120, source: 'globalping' },
+    ],
+    summary: { accessible: 2, blocked: 0, error: 0, unknown: 0 },
+  })),
+}))
+
 const createRequest = (url: string) => new Request(url)
 
 describe('GET /api/check', () => {
@@ -78,5 +94,16 @@ describe('GET /api/check', () => {
     const response = await GET(request)
 
     expect(response.headers.get('X-Request-ID')).toBe('test-request-id')
+  })
+
+  it('returns multi-region results when mode=multi', async () => {
+    const request = createRequest('http://localhost/api/check?url=example.com&mode=multi')
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.status).toBe('accessible')
+    expect(Array.isArray(data.regions)).toBe(true)
+    expect(data.summary).toBeDefined()
   })
 })

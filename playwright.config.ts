@@ -15,6 +15,7 @@ export default defineConfig({
     command: 'pnpm exec next dev -p 3000',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
     env: {
       NODE_OPTIONS: '--max-old-space-size=4096',
       NEXT_TELEMETRY_DISABLED: '1',

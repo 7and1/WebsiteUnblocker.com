@@ -97,16 +97,20 @@ export function validateUrl(input: string, options: {
       return { valid: false, error: 'INVALID_HOSTNAME' }
     }
 
-    // Prevent internal IP addresses in public requests
+    // Prevent internal IP addresses in public requests (SSRF protection)
     const hostname = url.hostname.toLowerCase()
     const internalPatterns = [
       /^127\./,
       /^10\./,
       /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
       /^192\.168\./,
+      /^169\.254\./, // AWS/Cloud metadata (link-local)
+      /^0\.0\.0\.0$/,
       /^localhost$/,
       /^::1$/,
       /^fe80:/,
+      /^fc00:/i, // IPv6 unique local (private)
+      /^fd[0-9a-f]{2}:/i, // IPv6 unique local (private)
     ]
 
     if (internalPatterns.some(p => p.test(hostname))) {

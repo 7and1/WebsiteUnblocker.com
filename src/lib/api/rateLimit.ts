@@ -126,9 +126,9 @@ async function kvRateLimit(
       state,
     }
   } catch (error) {
-    // Log KV errors but allow request through (fail-open)
-    console.error('KV rate limit error:', error)
-    return { allowed: true, state: { count: 0, reset: now + windowMs } }
+    // Log KV errors and reject request (fail-closed for security)
+    console.error('KV rate limit error - failing closed:', error)
+    return { allowed: false, state: { count: limit + 1, reset: now + windowMs } }
   }
 }
 

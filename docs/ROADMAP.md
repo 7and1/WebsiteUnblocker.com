@@ -33,7 +33,7 @@
 ## Phase 1: Core Tool Enhancement (Day 3-5)
 
 ### 1.1 Diagnosis Tool V2
-- [ ] Multi-region checking (US, EU, Asia endpoints)
+- [x] Multi-region checking (US, EU, Asia endpoints)
 - [ ] Detailed error categorization (DNS, timeout, blocked, 403)
 - [ ] Response time breakdown visualization
 - [ ] History of recent checks (localStorage)

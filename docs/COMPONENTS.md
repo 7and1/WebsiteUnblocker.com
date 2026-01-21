@@ -7,6 +7,7 @@ WebsiteUnblocker.com - React 19, Next.js 15, Tailwind CSS component library.
 - [Overview](#overview)
 - [Feature Components](#feature-components)
   - [DiagnosisTool](#diagnosistool)
+  - [ProxyRoutes](#proxyroutes)
   - [BlogCard](#blogcard)
   - [CTABanner](#ctabanner)
   - [ContactForm](#contactform)
@@ -52,21 +53,40 @@ The primary interactive component for checking website accessibility.
 #### TypeScript Interface
 
 ```typescript
-type CheckStatus = 'idle' | 'loading' | 'accessible' | 'blocked' | 'error'
+type CheckStatus = 'accessible' | 'blocked' | 'error'
+type RegionCheckStatus = 'accessible' | 'blocked' | 'error' | 'unknown'
+
+interface RegionCheckResult {
+  region: string
+  label: string
+  status: RegionCheckStatus
+  latency: number | null
+  code?: number
+  source?: 'edge' | 'globalping' | 'dns'
+  details?: string
+}
 
 interface CheckResult {
-  status: 'accessible' | 'blocked' | 'error'
+  status: CheckStatus
   code?: number
   latency: number
   target: string
   error?: string
   blockReason?: BlockReason
+  regions?: RegionCheckResult[]
+  summary?: {
+    accessible: number
+    blocked: number
+    error: number
+    unknown: number
+  }
 }
 
 interface DiagnosisState {
   url: string
-  status: CheckStatus
+  loading: boolean
   result: CheckResult | null
+  error: string | null
 }
 ```
 
@@ -104,6 +124,36 @@ export default function Page() {
   <span className="hidden md:inline">Checking...</span>
 )}
 ```
+
+---
+
+### ProxyRoutes
+
+Smart routing list that displays live proxy availability and latency.
+
+#### Location
+
+`/src/components/features/ProxyRoutes/`
+
+#### Files
+
+| File | Purpose |
+|------|---------|
+| `ProxyRoutes.tsx` | Live proxy list UI |
+| `index.ts` | Component export |
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `enabled` | `boolean` | `true` | Toggles data fetching and render |
+| `limit` | `number` | `10` | How many routes to actively probe |
+
+#### Notes
+
+- Fetches data from `GET /api/proxies`
+- Uses live status badges and latency
+- Separates verified routes from unverified extras
 
 ---
 

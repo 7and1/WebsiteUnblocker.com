@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { checkWebsite } from '@/lib/api/check'
 import type { CheckResult, DiagnosisState } from './types'
 
@@ -10,34 +10,47 @@ export function useDiagnosis(initialUrl = '') {
     error: null,
   })
 
+  // Use ref to track current URL and avoid race conditions
+  const urlRef = useRef(initialUrl)
+
   const setUrl = useCallback((url: string) => {
+    urlRef.current = url
     setState((prev) => ({ ...prev, url }))
   }, [])
 
-  const runCheck = useCallback(async () => {
-    if (!state.url.trim()) return
+  const runCheck = useCallback(async (urlOverride?: string) => {
+    const rawUrl = urlOverride ?? urlRef.current ?? ''
+    const targetUrl = typeof rawUrl === 'string' ? rawUrl.trim() : ''
+    if (!targetUrl) return
+
     setState((prev) => ({ ...prev, loading: true, result: null, error: null }))
 
     try {
-      const data: CheckResult = await checkWebsite(state.url.trim())
-      setTimeout(() => {
+      const data: CheckResult = await checkWebsite(targetUrl)
+      // Only update if URL hasn't changed during the request
+      const currentUrl = typeof urlRef.current === 'string' ? urlRef.current.trim() : ''
+      if (targetUrl === currentUrl) {
         setState((prev) => ({ ...prev, result: data, loading: false }))
-      }, 600)
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to check'
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        result: {
-          status: 'error',
-          latency: 0,
-          target: state.url.trim(),
+      // Only update if URL hasn't changed during the request
+      const currentUrl = typeof urlRef.current === 'string' ? urlRef.current.trim() : ''
+      if (targetUrl === currentUrl) {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          result: {
+            status: 'error',
+            latency: 0,
+            target: targetUrl,
+            error: message,
+          },
           error: message,
-        },
-        error: message,
-      }))
+        }))
+      }
     }
-  }, [state.url])
+  }, [])
 
   return { state, setUrl, runCheck }
 }

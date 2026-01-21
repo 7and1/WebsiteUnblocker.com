@@ -265,16 +265,15 @@ export class WebsiteCheckService {
         signal: controller.signal,
       })
 
-      clearTimeout(timeoutId)
       return response
     } catch (error) {
-      clearTimeout(timeoutId)
-
       // Re-throw with more context
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error(`Request timeout after ${options.timeout}ms`)
       }
       throw error
+    } finally {
+      clearTimeout(timeoutId)
     }
   }
 
