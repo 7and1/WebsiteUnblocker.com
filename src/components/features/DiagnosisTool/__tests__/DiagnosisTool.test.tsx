@@ -171,4 +171,27 @@ describe('DiagnosisTool', () => {
       expect(mockCheckWebsite).toHaveBeenCalled()
     })
   })
+
+  it('submits on button click', async () => {
+    const user = userEvent.setup()
+
+    mockCheckWebsite.mockResolvedValue({
+      status: 'accessible',
+      code: 200,
+      latency: 100,
+      target: 'https://test.com',
+    })
+
+    render(<DiagnosisTool />)
+
+    const input = screen.getByPlaceholderText(/youtube.com/i)
+    await user.type(input, 'test.com')
+
+    const button = screen.getByRole('button', { name: /check/i })
+    await user.click(button)
+
+    await waitFor(() => {
+      expect(mockCheckWebsite).toHaveBeenCalled()
+    })
+  })
 })

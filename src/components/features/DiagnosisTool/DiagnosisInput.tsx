@@ -26,7 +26,7 @@ export function DiagnosisInput({ url, loading, onChange, onSubmit }: DiagnosisIn
       </div>
       <Button
         type="button"
-        onClick={onSubmit}
+        onClick={() => onSubmit()}
         loading={loading}
         disabled={!url.trim()}
         size="lg"

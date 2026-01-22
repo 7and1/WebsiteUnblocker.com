@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="WebsiteUnblocker icon">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#10b981"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <path fill="#ffffff" d="M256 72c-2.5 0-5 .8-7.1 2.4C230.5 89.1 200 108 168 108c-8.8 0-16 7.2-16 16v112c0 80 56 120 97.3 143.2 2.1 1.2 4.4 1.8 6.7 1.8s4.6-.6 6.7-1.8C304 356 360 316 360 236V124c0-8.8-7.2-16-16-16-32 0-62.5-18.9-80.9-33.6-2.1-1.6-4.6-2.4-7.1-2.4zm0 48c24.5 17.3 54.3 32 88 35.8V236c0 56-36 88-88 113-52-25-88-57-88-113v-80.2c33.7-3.8 63.5-18.5 88-35.8z"/>
+</svg>
