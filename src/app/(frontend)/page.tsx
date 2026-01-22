@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { ArrowRight, Globe, Lock, Shield, Zap } from 'lucide-react'
+import { Globe, Lock, Shield, Zap } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 // Code splitting: dynamic imports for non-critical components
@@ -14,22 +14,6 @@ const DiagnosisTool = dynamic(
           <div className="h-8 bg-slate-200 rounded w-48 mb-4" />
           <div className="h-4 bg-slate-200 rounded w-full mb-3" />
           <div className="h-12 bg-slate-200 rounded w-full" />
-        </div>
-      </div>
-    ),
-  }
-)
-
-const BlogCard = dynamic(
-  () => import('@/components/features/BlogCard').then(m => ({ default: m.BlogCard })),
-  {
-    loading: () => (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6">
-        <div className="animate-pulse">
-          <div className="aspect-video bg-slate-200 rounded-xl mb-4" />
-          <div className="h-4 bg-slate-200 rounded w-20 mb-2" />
-          <div className="h-6 bg-slate-200 rounded w-full mb-2" />
-          <div className="h-4 bg-slate-200 rounded w-3/4" />
         </div>
       </div>
     ),
@@ -76,9 +60,6 @@ import {
   buildSoftwareApplicationSchema,
 } from '@/lib/seo'
 import { JsonLd } from '@/components/seo/JsonLd'
-import { siteConfig } from '@/config/site'
-import { absoluteUrl } from '@/lib/utils'
-import { kvCache } from '@/lib/cache/kvCache'
 
 export const metadata = buildMetadata({
   title: 'Website Unblocker - Check & Unblock Any Website Free',
@@ -87,38 +68,7 @@ export const metadata = buildMetadata({
   path: '/',
 })
 
-// ISR: Cache for 5 minutes with stale-while-revalidate for better performance
-export const revalidate = 300
-
-async function getLatestPosts() {
-  try {
-    // Dynamically import Payload to avoid module initialization issues
-    const [{ getPayload }, configPromise] = await Promise.all([
-      import('payload'),
-      import('@payload-config').then(m => m.default),
-    ])
-
-    // Use KV cache for frequently accessed posts data
-    // Reduces D1 database load and improves response times
-    return await kvCache({
-      key: 'homepage:latest-posts',
-      ttl: 300, // 5 minutes cache
-      swrTtl: 600, // Serve stale for up to 10 minutes while revalidating
-      fetchFn: async () => {
-        const payload = await getPayload({ config: configPromise })
-        const posts = await payload.find({ collection: 'posts', limit: 6, sort: '-published_date', depth: 1 })
-        return posts.docs
-      },
-    })
-  } catch (error) {
-    // Gracefully handle Payload CMS failures - return empty posts
-    console.error('Failed to fetch posts:', error)
-    return []
-  }
-}
-
-export default async function HomePage() {
-  const posts = await getLatestPosts()
+export default function HomePage() {
 
   // Build all structured data using centralized schema builders
   const breadcrumbSchema = buildBreadcrumbSchema([{ name: 'Home', path: '/' }])
@@ -297,38 +247,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Blog Section */}
-      {posts.length > 0 && (
-        <section className="py-20 px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-12">
-              <h2 className="text-3xl font-bold text-slate-900">
-                Latest Unblocking Guides
-              </h2>
-              <Link
-                href="/blog"
-                className="text-emerald-600 font-medium flex items-center gap-2 hover:gap-3 transition-all"
-              >
-                View All <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post: any) => (
-                <BlogCard
-                  key={post.id}
-                  title={post.title}
-                  slug={post.slug}
-                  tags={post.tags}
-                  description={post.meta_description}
-                  date={post.published_date}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       <CTABanner
         variant="fullwidth"
