@@ -122,8 +122,9 @@ export default function AffiliateDisclosurePage() {
           <h2>Questions or Concerns?</h2>
           <p>
             If you have any questions about our affiliate relationships or our recommendations,
-            please <Link href="/contact">contact us</Link>. We value your trust and are happy to
-            provide additional information.
+            please email us at{' '}
+            <a href="mailto:hello@websiteunblocker.com">hello@websiteunblocker.com</a>. We value
+            your trust and are happy to provide additional information.
           </p>
 
           <h2>Related Policies</h2>

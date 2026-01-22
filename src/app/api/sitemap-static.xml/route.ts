@@ -50,7 +50,6 @@ export async function GET() {
     { path: '/compare', priority: 0.6, changefreq: 'monthly', lastmod: lastMonth },
     { path: '/vpn', priority: 0.7, changefreq: 'monthly', lastmod: lastMonth },
     { path: '/about', priority: 0.5, changefreq: 'yearly', lastmod: '2026-01-01' },
-    { path: '/contact', priority: 0.4, changefreq: 'yearly', lastmod: '2026-01-01' },
     { path: '/privacy', priority: 0.5, changefreq: 'yearly', lastmod: '2026-01-01' },
     { path: '/terms', priority: 0.5, changefreq: 'yearly', lastmod: '2026-01-01' },
   ]

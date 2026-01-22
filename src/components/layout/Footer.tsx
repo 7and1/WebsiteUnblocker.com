@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Shield } from 'lucide-react'
+import { Shield, Mail } from 'lucide-react'
 import { siteConfig } from '@/config/site'
 
 export function Footer() {
@@ -13,6 +13,13 @@ export function Footer() {
               WebsiteUnblocker
             </Link>
             <p className="max-w-md text-sm text-slate-600">{siteConfig.description}</p>
+            <a
+              href={`mailto:${siteConfig.contact.email}`}
+              className="mt-4 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-emerald-600 transition-colors"
+            >
+              <Mail className="h-4 w-4" />
+              {siteConfig.contact.email}
+            </a>
           </div>
 
           <div>

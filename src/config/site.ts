@@ -43,7 +43,6 @@ export const siteConfig = {
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Terms of Service', href: '/terms' },
       { label: 'Affiliate Disclosure', href: '/affiliate-disclosure' },
-      { label: 'Contact', href: '/contact' },
     ],
   },
   affiliates: {
@@ -72,6 +71,6 @@ export const siteConfig = {
     twitter: 'https://twitter.com/websiteunblocker',
   },
   contact: {
-    email: 'support@websiteunblocker.com',
+    email: 'hello@websiteunblocker.com',
   },
 }
