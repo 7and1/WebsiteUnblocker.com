@@ -12,9 +12,15 @@
 #   SKIP_TESTS     - Skip running tests (true|false)
 #   SKIP_BACKUP    - Skip backup creation (true|false)
 #   DRY_RUN        - Show what would be done without executing (true|false)
+#   SKIP_AUDIT     - Skip post-deployment audit (true|false)
+#   AUDIT_TIMEOUT  - Post-deploy audit timeout in seconds (default: 20)
+#   FAIL_ON_AUDIT  - Fail deployment if audit fails (true|false, default: true)
 #
 
 set -euo pipefail
+
+# Avoid NO_COLOR/FORCE_COLOR conflict warnings in child Node.js processes
+unset NO_COLOR || true
 
 # Enable debug mode if DEBUG=true
 [[ "${DEBUG:-false}" == "true" ]] && set -x
@@ -112,7 +118,7 @@ pre_deployment_checklist() {
 
     # Check 3: Verify required files exist
     local required_files=(
-        "wrangler.jsonc"
+        "wrangler.toml"
         "package.json"
         "next.config.ts"
     )
@@ -197,17 +203,25 @@ validate_cloudflare_resources() {
     log_step "Validating Cloudflare resources..."
 
     local env="$1"
+    local suffix=""
+
+    if [[ "$env" != "production" ]]; then
+        suffix="-$env"
+    fi
+
+    local d1_name="$PROJECT_NAME-db$suffix"
+    local r2_name="$PROJECT_NAME-media$suffix"
 
     # Check D1 database exists
-    if ! wrangler d1 list --json 2>/dev/null | jq -e ".[] | select(.name == \"$PROJECT_NAME-db${env:+-$env}\")" &> /dev/null; then
-        log_warning "D1 database '$PROJECT_NAME-db${env:+-$env}' not found"
-        log_info "Create it with: wrangler d1 create $PROJECT_NAME-db${env:+-$env}"
+    if ! wrangler d1 list --json 2>/dev/null | jq -e ".[] | select(.name == \"$d1_name\")" &> /dev/null; then
+        log_warning "D1 database '$d1_name' not found"
+        log_info "Create it with: wrangler d1 create $d1_name"
     fi
 
     # Check R2 bucket exists
-    if ! wrangler r2 bucket list --json 2>/dev/null | jq -e ".[] | select(.name == \"$PROJECT_NAME-media${env:+-$env}\")" &> /dev/null; then
-        log_warning "R2 bucket '$PROJECT_NAME-media${env:+-$env}' not found"
-        log_info "Create it with: wrangler r2 bucket create $PROJECT_NAME-media${env:+-$env}"
+    if ! wrangler r2 bucket info "$r2_name" > /dev/null 2>&1; then
+        log_warning "R2 bucket '$r2_name' not found"
+        log_info "Create it with: wrangler r2 bucket create $r2_name"
     fi
 
     log_success "Cloudflare resources validated"
@@ -251,7 +265,7 @@ create_backup() {
     # Backup critical files
     tar -czf "$backup_file" \
         .wrangler/ \
-        wrangler.jsonc \
+        wrangler.toml \
         .dev.vars 2>/dev/null || true
 
     log_success "Backup created: $backup_file"
@@ -267,16 +281,28 @@ deploy_database() {
     cd "$PROJECT_ROOT"
 
     # Run migrations with proper environment
-    CLOUDFLARE_ENV="$ENVIRONMENT" \
+    if [[ "$ENVIRONMENT" == "production" ]]; then
         NODE_ENV=production \
-        PAYLOAD_SECRET=ignore \
-        pnpm payload migrate
+            PAYLOAD_SECRET=ignore \
+            pnpm payload migrate
+    else
+        CLOUDFLARE_ENV="$ENVIRONMENT" \
+            NODE_ENV=production \
+            PAYLOAD_SECRET=ignore \
+            pnpm payload migrate
+    fi
 
     # Optimize database
-    wrangler d1 execute D1 \
-        --command "PRAGMA optimize" \
-        --env="$ENVIRONMENT" \
-        --remote
+    if [[ "$ENVIRONMENT" == "production" ]]; then
+        wrangler d1 execute D1 \
+            --command "PRAGMA optimize" \
+            --remote
+    else
+        wrangler d1 execute D1 \
+            --command "PRAGMA optimize" \
+            --env="$ENVIRONMENT" \
+            --remote
+    fi
 
     log_success "Database migrations deployed"
 }
@@ -287,15 +313,33 @@ build_application() {
 
     cd "$PROJECT_ROOT"
 
-    # Generate types first
-    log_info "Generating types..."
-    pnpm run generate:types
+    log_info "Cleaning previous build artifacts..."
+    node -e "const fs=require('node:fs'); for (const p of ['.next','.open-next']) { fs.rmSync(p,{recursive:true,force:true,maxRetries:10,retryDelay:200}); }"
+
+    # Generate required app types first (Payload)
+    # Cloudflare runtime types are optional for deployment and can conflict
+    # with manually maintained cloudflare-env.d.ts.
+    log_info "Generating Payload types..."
+    pnpm run generate:types:payload
+
+    # Optional Cloudflare type regeneration (disabled by default)
+    if [[ "${GENERATE_CLOUDFLARE_TYPES:-false}" == "true" ]]; then
+        log_info "Generating Cloudflare runtime types (optional)..."
+        pnpm run generate:types:cloudflare
+    else
+        log_info "Skipping Cloudflare runtime type generation during deploy"
+    fi
 
     # Build with OpenNext
     log_info "Building with OpenNext..."
-    CLOUDFLARE_ENV="$ENVIRONMENT" \
-        NODE_OPTIONS="--no-deprecation --max-old-space-size=8000" \
-        opennextjs-cloudflare build
+    if [[ "$ENVIRONMENT" == "production" ]]; then
+        env -u CLOUDFLARE_ENV NODE_OPTIONS="--no-deprecation --max-old-space-size=8000" \
+            pnpm exec opennextjs-cloudflare build
+    else
+        CLOUDFLARE_ENV="$ENVIRONMENT" \
+            NODE_OPTIONS="--no-deprecation --max-old-space-size=8000" \
+            pnpm exec opennextjs-cloudflare build
+    fi
 
     log_success "Application built successfully"
 }
@@ -306,8 +350,12 @@ deploy_application() {
 
     cd "$PROJECT_ROOT"
 
-    CLOUDFLARE_ENV="$ENVIRONMENT" \
-        opennextjs-cloudflare deploy
+    if [[ "$ENVIRONMENT" == "production" ]]; then
+        env -u CLOUDFLARE_ENV pnpm exec opennextjs-cloudflare deploy
+    else
+        CLOUDFLARE_ENV="$ENVIRONMENT" \
+            pnpm exec opennextjs-cloudflare deploy
+    fi
 
     log_success "Deployment completed"
 }
@@ -455,6 +503,39 @@ post_deployment_verification() {
     return 0
 }
 
+# Post-deployment audit
+run_post_deploy_audit() {
+    if [[ "${SKIP_AUDIT:-false}" == "true" ]]; then
+        log_warning "Skipping post-deployment audit (SKIP_AUDIT=true)"
+        return 0
+    fi
+
+    local audit_script="$PROJECT_ROOT/scripts/post-deploy-audit.sh"
+    if [[ ! -x "$audit_script" ]]; then
+        log_warning "Post-deploy audit script not found or not executable: $audit_script"
+        add_warning "Post-deploy audit script missing"
+        return 0
+    fi
+
+    local audit_timeout="${AUDIT_TIMEOUT:-20}"
+    log_step "Running post-deployment audit..."
+
+    if "$audit_script" "$ENVIRONMENT" --timeout "$audit_timeout"; then
+        log_success "Post-deployment audit passed"
+        return 0
+    fi
+
+    log_error "Post-deployment audit failed"
+    add_error "Post-deployment audit failed"
+
+    if [[ "${FAIL_ON_AUDIT:-true}" == "true" ]]; then
+        return 1
+    fi
+
+    add_warning "Post-deployment audit failed (ignored with FAIL_ON_AUDIT=false)"
+    return 0
+}
+
 # Rollback
 rollback() {
     log_error "Deployment failed, initiating rollback..."
@@ -500,6 +581,7 @@ main() {
         log_info "DRY RUN: Would deploy database migrations"
         log_info "DRY RUN: Would build application"
         log_info "DRY RUN: Would deploy to Cloudflare"
+        log_info "DRY RUN: Would run post-deployment audit"
         log_success "DRY RUN completed - no changes made"
         return 0
     fi
@@ -511,6 +593,7 @@ main() {
     deploy_application
     health_check
     post_deployment_verification
+    run_post_deploy_audit
 
     # Clear trap on success
     trap - ERR
@@ -536,6 +619,7 @@ main() {
     fi
     log_info "URL: $deploy_url"
     log_info "Verify deployment: ./scripts/health-check.sh $ENVIRONMENT"
+    log_info "Post-deploy audit: ./scripts/post-deploy-audit.sh $ENVIRONMENT"
 }
 
 # Run main function

@@ -35,7 +35,15 @@ export async function generateMetadata({ params }: Props) {
 export default async function ToolPage({ params }: Props) {
   const { tool: toolSlug } = await params
   const tool = tools.find((entry) => entry.slug === toolSlug)
-  if (!tool) notFound()
+
+  if (!tool) {
+    notFound()
+  }
+
+  const toolComponent = TOOL_COMPONENTS[tool.slug]
+  if (!toolComponent) {
+    notFound()
+  }
 
   const breadcrumbSchema = buildBreadcrumbSchema([
     { name: 'Home', path: '/' },
@@ -50,13 +58,7 @@ export default async function ToolPage({ params }: Props) {
         <h1 className="text-4xl font-extrabold text-slate-900">{tool.name}</h1>
         <p className="mt-4 text-lg text-slate-600">{tool.description}</p>
 
-        <div className="mt-10">
-          {TOOL_COMPONENTS[tool.slug] || (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-              <p className="text-slate-600">Tool coming soon.</p>
-            </div>
-          )}
-        </div>
+        <div className="mt-10">{toolComponent}</div>
       </section>
     </main>
   )

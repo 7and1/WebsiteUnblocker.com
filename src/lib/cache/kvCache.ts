@@ -99,7 +99,6 @@ type CacheMetadata = {
  * Key: cache key, Value: promise that resolves when the fetch completes
  */
 declare global {
-  // eslint-disable-next-line no-var
   var __kvPendingRequests: Map<string, Promise<unknown>> | undefined
 }
 

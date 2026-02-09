@@ -84,11 +84,7 @@ export const unblockTargets: UnblockTarget[] = [
   // Shopping
   { slug: 'amazon', name: 'Amazon', category: 'Shopping', summary: 'Shopping with regional variations.', blockedIn: ['Some regions'], url: 'amazon.com', popularity: 95 },
   { slug: 'ebay', name: 'eBay', category: 'Shopping', summary: 'Marketplace blocked in some regions.', blockedIn: ['Some regions'], url: 'ebay.com', popularity: 70 },
-  { slug: 'etsy', name: 'Etsy', category: 'Shopping', summary: 'Handmade goods with geo-blocks.', blockedIn: ['Some regions'], url: 'etsy.com', popularity: 60 },
-
-  // Community
-  { slug: 'discord', name: 'Discord', category: 'Community', summary: 'Community platform blocked in China.', blockedIn: ['China'], url: 'discord.com', popularity: 85 },
-]
+  { slug: 'etsy', name: 'Etsy', category: 'Shopping', summary: 'Handmade goods with geo-blocks.', blockedIn: ['Some regions'], url: 'etsy.com', popularity: 60 },]
 
 // Helper function to get targets by category
 export function getTargetsByCategory(category: UnblockTarget['category']): UnblockTarget[] {

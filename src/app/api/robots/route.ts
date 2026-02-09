@@ -1,7 +1,5 @@
 import { siteConfig } from '@/config/site'
 
-// Cloudflare Workers compatible runtime (default nodejs with nodejs_compat)
-
 export async function GET() {
   const content = `# Robots.txt for ${siteConfig.name}
 # Last updated: ${new Date().toISOString().split('T')[0]}
@@ -11,19 +9,24 @@ Allow: /
 
 # Disallow admin and private paths
 Disallow: /admin/
-Disallow: /api/
 Disallow: /private/
 Disallow: /*.json$
 
-# Allow important API endpoints for indexing
-Allow: /api/sitemap.xml
+# Limit generic API crawling
+Disallow: /api/
+Allow: /api/sitemap
 Allow: /api/sitemap-static.xml
 Allow: /api/sitemap-unblock.xml
 Allow: /api/sitemap-blocked.xml
 Allow: /api/sitemap-blog.xml
-Allow: /api/robots.txt
 
-# SEO Tools - Allow crawling for analysis
+# Allow explicit SEO endpoints
+Allow: /sitemap.xml
+Allow: /robots.txt
+Allow: /feed.xml
+Allow: /feed.atom
+
+# SEO tools crawl allowance
 User-agent: AhrefsBot
 Allow: /
 
@@ -39,14 +42,18 @@ Allow: /
 User-agent: DotBot
 Allow: /
 
-# Sitemap Index
+# Sitemap index and children
 Sitemap: ${siteConfig.url}/sitemap.xml
+Sitemap: ${siteConfig.url}/api/sitemap-static.xml
+Sitemap: ${siteConfig.url}/api/sitemap-unblock.xml
+Sitemap: ${siteConfig.url}/api/sitemap-blocked.xml
+Sitemap: ${siteConfig.url}/api/sitemap-blog.xml
 `
 
   return new Response(content, {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'public, max-age=86400', // Cache for 1 day
+      'Cache-Control': 'public, max-age=86400',
     },
   })
 }

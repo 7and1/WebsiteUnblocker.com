@@ -24,7 +24,7 @@ const statusMeta: Record<
 export function ProxyRoutes({ enabled = true, limit = 10 }: ProxyRoutesProps) {
   const [data, setData] = useState<ProxyRouteResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(enabled)
   const [showAll, setShowAll] = useState(false)
 
   const fallbackData = useMemo<ProxyRouteResponse>(() => {
@@ -48,24 +48,28 @@ export function ProxyRoutes({ enabled = true, limit = 10 }: ProxyRoutesProps) {
 
   useEffect(() => {
     if (!enabled) return
-    let isActive = true
-    setLoading(true)
-    setError(null)
 
-    fetchProxyRoutes(limit)
-      .then((response) => {
+    let isActive = true
+
+    const loadRoutes = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const response = await fetchProxyRoutes(limit)
         if (!isActive) return
         setData(response)
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!isActive) return
         setError(err instanceof Error ? err.message : 'Unable to load routes')
         setData(fallbackData)
-      })
-      .finally(() => {
+      } finally {
         if (!isActive) return
         setLoading(false)
-      })
+      }
+    }
+
+    void loadRoutes()
 
     return () => {
       isActive = false
@@ -90,13 +94,18 @@ export function ProxyRoutes({ enabled = true, limit = 10 }: ProxyRoutesProps) {
             <h3 className="text-lg font-semibold text-slate-900">Free Proxy Options</h3>
           </div>
         </div>
-        <Badge variant="info" className="bg-slate-900 text-white">Live checks</Badge>
+        <Badge variant="info" className="bg-slate-900 text-white">
+          Live checks
+        </Badge>
       </div>
 
       {loading && (
         <div className="mt-4 space-y-3">
           {Array.from({ length: 4 }).map((_, idx) => (
-            <div key={`proxy-skeleton-${idx}`} className="h-16 rounded-xl border border-slate-100 bg-slate-50 animate-pulse" />
+            <div
+              key={`proxy-skeleton-${idx}`}
+              className="h-16 animate-pulse rounded-xl border border-slate-100 bg-slate-50"
+            />
           ))}
         </div>
       )}

@@ -30,9 +30,7 @@ type RateLimitResult = {
 
 // Cloudflare KV namespace type (available at runtime in Cloudflare Workers)
 declare global {
-  // eslint-disable-next-line no-var
   var RATE_LIMIT_KV: KVNamespace | undefined
-  // eslint-disable-next-line no-var
   var __rateLimitStore: Map<string, RateLimitState> | undefined
 }
 

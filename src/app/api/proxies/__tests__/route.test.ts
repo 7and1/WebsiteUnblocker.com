@@ -26,6 +26,10 @@ vi.mock('@/lib/cache/kvCache', () => ({
 
 const createRequest = (url: string) => new Request(url)
 
+type ProxiesApiResponse = {
+  routes?: unknown[]
+}
+
 describe('GET /api/proxies', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -34,7 +38,7 @@ describe('GET /api/proxies', () => {
   it('returns proxy health snapshot', async () => {
     const request = createRequest('http://localhost/api/proxies')
     const response = await GET(request)
-    const data = await response.json()
+    const data = (await response.json()) as ProxiesApiResponse
 
     expect(response.status).toBe(200)
     expect(data.routes).toBeDefined()

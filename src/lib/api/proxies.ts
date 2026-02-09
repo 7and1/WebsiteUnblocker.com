@@ -18,11 +18,31 @@ export interface ProxyRouteResponse {
   routes: ProxyRoute[]
 }
 
+type ErrorPayload = {
+  error?: {
+    message?: string
+  }
+}
+
+function getErrorMessage(payload: unknown): string {
+  if (!payload || typeof payload !== 'object') {
+    return 'Unable to load proxy routes'
+  }
+
+  const typedPayload = payload as ErrorPayload
+  if (typeof typedPayload.error?.message === 'string' && typedPayload.error.message.length > 0) {
+    return typedPayload.error.message
+  }
+
+  return 'Unable to load proxy routes'
+}
+
 export async function fetchProxyRoutes(limit = 10): Promise<ProxyRouteResponse> {
   const response = await fetch(`/api/proxies?limit=${limit}`)
   if (!response.ok) {
-    const errorPayload = await response.json().catch(() => null)
-    throw new Error(errorPayload?.error?.message || 'Unable to load proxy routes')
+    const errorPayload = (await response.json().catch(() => null)) as unknown
+    throw new Error(getErrorMessage(errorPayload))
   }
-  return response.json()
+
+  return (await response.json()) as ProxyRouteResponse
 }

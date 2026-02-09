@@ -8,38 +8,57 @@ import { RateLimitError, BadRequestError } from '@/errors'
 import { generateRequestId, logger } from '@/lib/logger'
 import { kvCache } from '@/lib/cache/kvCache'
 
-// Cloudflare Workers compatible runtime
 export const dynamic = 'force-dynamic'
 
-// Maximum URL length to prevent abuse
 const MAX_URL_LENGTH = 2048
 
-// Cache TTL settings (in seconds)
 const CACHE_TTL = {
-  SINGLE_CHECK: 30, // 30 seconds for single checks
-  MULTI_CHECK: 60, // 1 minute for multi-region checks
-  SWR_TTL: 120, // 2 minutes stale-while-revalidate
+  SINGLE_CHECK: 30,
+  MULTI_CHECK: 60,
+  SWR_TTL: 120,
 }
 
-/**
- * GET /api/check?url=example.com
- *
- * Check if a website is accessible
- */
+function encodeCacheSegment(value: string): string {
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(value).toString('base64url').slice(0, 32)
+  }
+
+  if (typeof btoa === 'function') {
+    return btoa(value).replace(/[+/=]/g, '').slice(0, 32)
+  }
+
+  return value.replace(/[^a-z0-9]/gi, '').slice(0, 32)
+}
+
+function buildCacheKey(targetUrl: string): string {
+  const target = new URL(targetUrl)
+  const pathAndQuery = `${target.pathname}${target.search}`
+
+  if (!pathAndQuery || pathAndQuery === '/') {
+    return target.hostname
+  }
+
+  return `${target.hostname}:${encodeCacheSegment(pathAndQuery)}`
+}
+
 export async function GET(request: Request) {
   const requestId = generateRequestId()
   const clientIp = getClientIp(request)
   const { searchParams } = new URL(request.url)
   const rawUrl = searchParams.get('url')
   const mode = searchParams.get('mode')
+  const isMulti = mode === 'multi'
 
   logger.info('Website check request', { requestId, url: rawUrl, ip: clientIp })
 
-  // Rate limit check (async for KV support)
   const rate = await rateLimit({ request, limit: 100, windowMs: 60_000, keyPrefix: 'check' })
+  const cacheControl = isMulti
+    ? 'public, max-age=60, stale-while-revalidate=120'
+    : 'public, max-age=30, stale-while-revalidate=60'
+
   const baseHeaders = {
     ...rateLimitHeaders(rate),
-    'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
+    'Cache-Control': cacheControl,
     'X-Request-ID': requestId,
   }
 
@@ -50,31 +69,34 @@ export async function GET(request: Request) {
       reset: rate.reset,
       requestId,
     })
-    return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: { ...baseHeaders, ...error.getHeaders() } })
+
+    return NextResponse.json(error.toJSON(), {
+      status: error.statusCode,
+      headers: { ...baseHeaders, ...error.getHeaders() },
+    })
   }
 
-  // Validate URL parameter exists
   if (!rawUrl) {
     const error = new BadRequestError('URL parameter is required', undefined, requestId)
     return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: baseHeaders })
   }
 
-  // Check URL length before processing
   if (rawUrl.length > MAX_URL_LENGTH) {
     logValidationFailure({
       type: 'url_too_long',
       input: rawUrl.substring(0, 100),
       ip: clientIp,
     })
+
     const error = new BadRequestError(
       `URL exceeds maximum length of ${MAX_URL_LENGTH} characters`,
       { field: 'url', maxLength: MAX_URL_LENGTH },
       requestId
     )
+
     return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: baseHeaders })
   }
 
-  // Validate URL format and security
   const urlValidation = validateUrl(rawUrl, {
     allowedProtocols: ['http:', 'https:'],
     allowUserPass: false,
@@ -87,6 +109,7 @@ export async function GET(request: Request) {
       input: rawUrl,
       ip: clientIp,
     })
+
     const error = new BadRequestError(
       urlValidation.error === 'INTERNAL_ADDRESS_NOT_ALLOWED'
         ? 'Internal IP addresses are not allowed'
@@ -94,18 +117,14 @@ export async function GET(request: Request) {
       { field: 'url', code: urlValidation.error },
       requestId
     )
+
     return NextResponse.json(error.toJSON(), { status: error.statusCode, headers: baseHeaders })
   }
 
   const targetUrl = urlValidation.sanitized!
-  const isMulti = mode === 'multi'
 
   try {
-    // Generate cache key using hostname + path (base64 encoded, truncated)
-    const targetUrlObj = new URL(targetUrl)
-    const cacheKey = targetUrlObj.pathname === '/'
-      ? targetUrlObj.hostname
-      : `${targetUrlObj.hostname}:${btoa(targetUrlObj.pathname).slice(0, 16)}`
+    const cacheKey = buildCacheKey(targetUrl)
 
     if (isMulti) {
       const multiResult = await kvCache({
@@ -138,10 +157,16 @@ export async function GET(request: Request) {
       )
     }
 
-    const result = await checkWebsite(targetUrl, {
-      timeout: 5000,
-      maxRetries: 1,
-      requestId,
+    const result = await kvCache({
+      key: `check:single:${cacheKey}`,
+      ttl: CACHE_TTL.SINGLE_CHECK,
+      swrTtl: CACHE_TTL.SWR_TTL,
+      fetchFn: () =>
+        checkWebsite(targetUrl, {
+          timeout: 5000,
+          maxRetries: 1,
+          requestId,
+        }),
     })
 
     logger.info('Website check completed', {
@@ -152,7 +177,11 @@ export async function GET(request: Request) {
       latency: result.latency,
     })
 
-    const publicStatus = result.isAccessible ? 'accessible' : result.status === 'blocked' ? 'blocked' : 'error'
+    const publicStatus = result.isAccessible
+      ? 'accessible'
+      : result.status === 'blocked'
+        ? 'blocked'
+        : 'error'
 
     return NextResponse.json(
       {
@@ -167,7 +196,6 @@ export async function GET(request: Request) {
       { headers: baseHeaders }
     )
   } catch (error) {
-    // Handle unexpected errors
     logger.error('Website check failed', error as Error, { requestId, targetUrl })
     return NextResponse.json(
       {

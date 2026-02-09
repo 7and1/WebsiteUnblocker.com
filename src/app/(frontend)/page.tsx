@@ -69,6 +69,7 @@ export const metadata = buildMetadata({
 })
 
 export default function HomePage() {
+  const isProxyChecksEnabled = process.env.ENABLE_PROXY_CHECKS !== 'false'
 
   // Build all structured data using centralized schema builders
   const breadcrumbSchema = buildBreadcrumbSchema([{ name: 'Home', path: '/' }])
@@ -194,7 +195,7 @@ export default function HomePage() {
                 Live checks of popular free proxy services. Pick a route to open the proxy site in a new tab.
               </p>
             </div>
-            <ProxyRoutes />
+            <ProxyRoutes enabled={isProxyChecksEnabled} />
           </div>
         </section>
 

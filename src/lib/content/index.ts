@@ -14,3 +14,4 @@ export {
 } from './blockedTargets'
 export { tools } from './tools'
 export { vpnProviders, vpnComparisons, vpnBestFor } from './vpn'
+export { guides, guideCategories, type GuideItem, type GuideCategory } from './guides'

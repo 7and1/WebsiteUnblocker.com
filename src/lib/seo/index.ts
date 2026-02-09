@@ -3,8 +3,8 @@ import { siteConfig } from '@/config/site'
 import { absoluteUrl } from '@/lib/utils'
 
 // Default OG image paths
-const DEFAULT_OG_IMAGE = '/og-image.png'
-const DEFAULT_TWITTER_IMAGE = '/twitter-image.png'
+const DEFAULT_OG_IMAGE = '/opengraph-image'
+const DEFAULT_TWITTER_IMAGE = '/twitter-image'
 
 export interface BuildMetadataOptions {
   title: string
@@ -50,6 +50,12 @@ export function buildMetadata(options: BuildMetadataOptions): Metadata {
   ]
 
   const ogImages = images && images.length > 0 ? images : defaultImages
+  const twitterImages =
+    images && images.length > 0
+      ? ogImages.map((img) =>
+          img.url.startsWith('http') ? img.url : absoluteUrl(img.url, siteConfig.url)
+        )
+      : [absoluteUrl(DEFAULT_TWITTER_IMAGE, siteConfig.url)]
 
   const metadata: Metadata = {
     title,
@@ -82,9 +88,7 @@ export function buildMetadata(options: BuildMetadataOptions): Metadata {
       card: 'summary_large_image',
       title,
       description: siteDescription,
-      images: ogImages.map((img) =>
-        img.url.startsWith('http') ? img.url : absoluteUrl(img.url, siteConfig.url)
-      ),
+      images: twitterImages,
       creator: '@websiteunblocker',
       site: '@websiteunblocker',
     },
@@ -114,7 +118,7 @@ export function buildArticleMetadata(options: {
 }) {
   return buildMetadata({
     ...options,
-    path: `/blog/${options.slug}`,
+    path: `/guides/${options.slug}`,
     ogType: 'article',
     authors: options.author ? [options.author] : [siteConfig.name],
     images: options.image
@@ -159,7 +163,7 @@ export function buildOrganizationSchema() {
     url: siteConfig.url,
     logo: {
       '@type': 'ImageObject',
-      url: absoluteUrl('/logo.png', siteConfig.url),
+      url: absoluteUrl('/icons/icon-512x512.png', siteConfig.url),
       width: 512,
       height: 512,
     },
@@ -234,7 +238,7 @@ export function buildArticleSchema({
   author?: string
   image?: string
 }) {
-  const url = absoluteUrl(`/blog/${slug}`, siteConfig.url)
+  const url = absoluteUrl(`/guides/${slug}`, siteConfig.url)
   return {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -397,7 +401,7 @@ export function generateComparisonMetadata(options: {
     overall: 'features, speed, and value',
   }
 
-  const title = `${vpn1} vs ${vpn2}: Which VPN is Better in 2024?`
+  const title = `${vpn1} vs ${vpn2}: Which VPN is Better in ${new Date().getFullYear()}?`
   const description = `Compare ${vpn1} vs ${vpn2} side by side. We analyze ${focusText[focus]}, streaming, and more to help you choose the right VPN for your needs.`
 
   const truncatedDescription =

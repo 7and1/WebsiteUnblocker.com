@@ -62,20 +62,13 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: 'Website Unblocker - Check & Unblock Any Website Free',
     description: siteConfig.description,
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Website Unblocker',
-      },
-    ],
+    // Images are auto-generated from opengraph-image.tsx
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Website Unblocker - Check & Unblock Any Website Free',
     description: siteConfig.description,
-    images: ['/twitter-image.png'],
+    // Images are auto-generated from twitter-image.tsx
     creator: '@websiteunblocker',
   },
   robots: {
@@ -96,6 +89,14 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: siteConfig.url,
+    languages: {
+      'en': siteConfig.url,
+      'x-default': siteConfig.url,
+    },
+    types: {
+      'application/rss+xml': '/feed.xml',
+      'application/atom+xml': '/feed.atom',
+    },
   },
   category: 'technology',
 }
@@ -106,9 +107,7 @@ const PRECONNECT_DOMAINS = [
 ]
 
 // Critical resources to preload for faster LCP
-const PRELOAD_RESOURCES = [
-  { href: '/og-image.png', as: 'image', type: 'image/png' },
-] as const
+const PRELOAD_RESOURCES: readonly { href: string; as: string; type: string }[] = []
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

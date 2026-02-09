@@ -28,14 +28,14 @@ export const siteConfig = {
     'unblock tiktok',
   ],
   nav: [
-    { label: 'Guides', href: '/blog' },
+    { label: 'Guides', href: '/guides' },
     { label: 'Tools', href: '/tools' },
     { label: 'Unblock', href: '/unblock' },
     { label: 'Compare', href: '/compare' },
   ],
   footer: {
     resources: [
-      { label: 'Guides', href: '/blog' },
+      { label: 'Guides', href: '/guides' },
       { label: 'Tools', href: '/tools' },
       { label: 'Unblock YouTube', href: '/unblock/youtube' },
     ],
@@ -72,5 +72,11 @@ export const siteConfig = {
   },
   contact: {
     email: 'hello@websiteunblocker.com',
+  },
+  // Hreflang configuration for international SEO
+  // Currently English-only, but structured for future expansion
+  locales: {
+    default: 'en',
+    supported: ['en'] as const,
   },
 }

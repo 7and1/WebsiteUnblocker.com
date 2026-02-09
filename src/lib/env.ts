@@ -153,11 +153,25 @@ export function validateCloudflareBindings(): {
   }
 }
 
-// Run validation on import (only in non-production to avoid startup impact)
-if (process.env.NODE_ENV !== 'production') {
+declare global {
+  var __websiteUnblockerEnvValidationRan: boolean | undefined
+}
+
+function shouldRunValidation() {
+  return process.env.NODE_ENV !== 'production' && process.env.DISABLE_ENV_VALIDATION !== 'true'
+}
+
+function shouldLogOptionalWarnings() {
+  return getBoolEnv('SHOW_OPTIONAL_ENV_WARNINGS', false)
+}
+
+// Run validation once per process to avoid noisy repeated logs
+if (shouldRunValidation() && !globalThis.__websiteUnblockerEnvValidationRan) {
+  globalThis.__websiteUnblockerEnvValidationRan = true
+
   const result = validateEnv()
 
-  if (result.warnings.length > 0) {
+  if (shouldLogOptionalWarnings() && result.warnings.length > 0) {
     console.warn('Environment warnings:')
     for (const warning of result.warnings) {
       console.warn(`  - ${warning.message}`)

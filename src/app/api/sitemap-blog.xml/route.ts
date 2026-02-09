@@ -1,9 +1,7 @@
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
 import { siteConfig } from '@/config/site'
 import { absoluteUrl } from '@/lib/utils'
+import { getGuideTagStats, getPublishedPosts } from '@/lib/content/posts'
 
-// Use nodejs runtime to access Payload CMS
 export const runtime = 'nodejs'
 
 interface SitemapImage {
@@ -64,59 +62,42 @@ function buildSitemapUrl(
   return parts.join('')
 }
 
-async function getBlogPosts(): Promise<Array<{ slug: string; updatedAt: string; image?: string }>> {
-  try {
-    const payload = await getPayload({ config: configPromise })
-    const posts = await payload.find({
-      collection: 'posts',
-      limit: 1000,
-      sort: '-published_date',
-      depth: 0,
-    })
-    return posts.docs.map((post: any) => ({
-      slug: post.slug,
-      updatedAt: post.updatedAt || post.published_date,
-      image: post.hero_image,
-    }))
-  } catch {
-    return []
-  }
-}
-
 export async function GET() {
   const now = new Date().toISOString()
 
-  // Blog index page
-  const blogIndexUrl = buildSitemapUrl('/blog', {
+  const guidesIndexUrl = buildSitemapUrl('/guides', {
     priority: 0.9,
     changefreq: 'daily',
     lastmod: now,
   })
 
-  // Fetch blog posts from Payload CMS
-  const blogPosts = await getBlogPosts()
-  const blogPages = blogPosts.map((post) =>
-    buildSitemapUrl(`/blog/${post.slug}`, {
+  const [guidePosts, guideTags] = await Promise.all([
+    getPublishedPosts(1000),
+    getGuideTagStats(1000),
+  ])
+
+  const guidePages = guidePosts.map((post) =>
+    buildSitemapUrl(`/guides/${post.slug}`, {
       priority: 0.8,
       changefreq: 'monthly',
       lastmod: post.updatedAt,
-      images: post.image
-        ? [
-            {
-              loc: absoluteUrl(post.image, siteConfig.url),
-              caption: `Blog post featured image`,
-              title: 'Website Unblocker Blog',
-            },
-          ]
-        : undefined,
+    })
+  )
+
+  const tagPages = guideTags.map((tag) =>
+    buildSitemapUrl(`/tag/${tag.slug}`, {
+      priority: 0.6,
+      changefreq: 'weekly',
+      lastmod: now,
     })
   )
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-${blogIndexUrl}
-${blogPages.join('\n')}
+${guidesIndexUrl}
+${guidePages.join('\n')}
+${tagPages.join('\n')}
 </urlset>`
 
   return new Response(xml, {

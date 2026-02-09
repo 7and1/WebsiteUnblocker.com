@@ -18,9 +18,7 @@ export function TableOfContents() {
     const article = document.querySelector('article')
     if (!article) return
 
-    const headingElements = Array.from(
-      article.querySelectorAll('h2, h3')
-    ) as HTMLHeadingElement[]
+    const headingElements = Array.from(article.querySelectorAll('h2, h3')) as HTMLHeadingElement[]
 
     const newHeadings = headingElements
       .map((heading) => ({
@@ -28,11 +26,12 @@ export function TableOfContents() {
         text: heading.textContent || '',
         level: parseInt(heading.tagName.substring(1)),
       }))
-      .filter((h) => h.text)
+      .filter((heading) => heading.text)
 
-    setHeadings(newHeadings)
+    const rafId = requestAnimationFrame(() => {
+      setHeadings(newHeadings)
+    })
 
-    // Add IDs to headings that don't have them
     headingElements.forEach((heading, index) => {
       if (!heading.id && newHeadings[index]) {
         heading.id = newHeadings[index].id
@@ -52,7 +51,10 @@ export function TableOfContents() {
 
     headingElements.forEach((heading) => observer.observe(heading))
 
-    return () => observer.disconnect()
+    return () => {
+      cancelAnimationFrame(rafId)
+      observer.disconnect()
+    }
   }, [])
 
   if (headings.length === 0) return null
@@ -74,21 +76,21 @@ export function TableOfContents() {
   }
 
   return (
-    <nav className="hidden lg:block sticky top-24 max-h-[calc(100vh-200px)] overflow-y-auto">
-      <div className="flex items-center gap-2 mb-4 text-sm font-medium text-slate-700">
-        <List className="w-4 h-4" />
+    <nav className="sticky top-24 hidden max-h-[calc(100vh-200px)] overflow-y-auto lg:block">
+      <div className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-700">
+        <List className="h-4 w-4" />
         On this page
       </div>
-      <ul className="space-y-2 text-sm border-l border-slate-200">
+      <ul className="space-y-2 border-l border-slate-200 text-sm">
         {headings.map((heading) => (
           <li key={heading.id}>
             <button
               onClick={() => handleClick(heading.id)}
               className={cn(
-                'block text-left w-full py-1.5 px-4 -ml-px border-l-2 transition-colors',
+                '-ml-px block w-full border-l-2 px-4 py-1.5 text-left transition-colors',
                 activeId === heading.id
-                  ? 'border-emerald-500 text-emerald-600 font-medium'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300',
+                  ? 'border-emerald-500 font-medium text-emerald-600'
+                  : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900',
                 heading.level === 3 && 'pl-8 text-xs'
               )}
             >

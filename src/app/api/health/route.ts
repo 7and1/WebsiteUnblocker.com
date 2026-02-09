@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 
-// Cloudflare Workers compatible runtime
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
@@ -24,7 +23,12 @@ export async function GET() {
     // Ignore errors; health status derived below.
   }
 
-  const status = database === 'ok' && storage === 'ok' ? 'healthy' : database === 'ok' || storage === 'ok' ? 'degraded' : 'unhealthy'
+  const hasAnyBinding = database === 'ok' || storage === 'ok'
+  const status = hasAnyBinding
+    ? database === 'ok' && storage === 'ok'
+      ? 'healthy'
+      : 'degraded'
+    : 'ok'
 
   return NextResponse.json({
     status,

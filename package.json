@@ -23,10 +23,12 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "vitest run",
     "test:all": "pnpm run test:unit && pnpm run test:e2e",
-    "test:e2e": "playwright test",
+    "test:e2e": "env -u NO_COLOR playwright test",
     "test:unit": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "audit:postdeploy": "./scripts/post-deploy-audit.sh production",
+    "audit:postdeploy:staging": "./scripts/post-deploy-audit.sh staging"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.11.0",

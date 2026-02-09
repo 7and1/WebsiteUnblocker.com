@@ -97,8 +97,10 @@ export function validateUrl(input: string, options: {
       return { valid: false, error: 'INVALID_HOSTNAME' }
     }
 
-    // Prevent internal IP addresses in public requests (SSRF protection)
     const hostname = url.hostname.toLowerCase()
+    const hostnameNoBrackets = hostname.replace(/^\[|\]$/g, '')
+
+    // Prevent internal IP addresses in public requests (SSRF protection)
     const internalPatterns = [
       /^127\./,
       /^10\./,
@@ -113,8 +115,16 @@ export function validateUrl(input: string, options: {
       /^fd[0-9a-f]{2}:/i, // IPv6 unique local (private)
     ]
 
-    if (internalPatterns.some(p => p.test(hostname))) {
+    if (internalPatterns.some(p => p.test(hostname) || p.test(hostnameNoBrackets))) {
       return { valid: false, error: 'INTERNAL_ADDRESS_NOT_ALLOWED' }
+    }
+
+    const isIPv4 = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(hostnameNoBrackets)
+    const isIPv6 = /^[0-9a-f:]+$/i.test(hostnameNoBrackets) && hostnameNoBrackets.includes(':')
+    const isValidDomain = /^(?=.{1,253}$)(?!-)([a-z0-9-]{1,63}\.)+[a-z]{2,63}$/i.test(hostnameNoBrackets)
+
+    if (!isIPv4 && !isIPv6 && !isValidDomain) {
+      return { valid: false, error: 'INVALID_HOSTNAME' }
     }
 
     // Build sanitized URL

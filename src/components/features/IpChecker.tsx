@@ -13,18 +13,43 @@ type IpResponse = {
 
 export function IpChecker() {
   const [data, setData] = useState<IpResponse | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  const fetchIp = async () => {
+    const response = await fetch('/api/ip', { cache: 'no-store' })
+    return response.json() as Promise<IpResponse>
+  }
 
   const load = async () => {
     setLoading(true)
-    const response = await fetch('/api/ip', { cache: 'no-store' })
-    const json = await response.json()
-    setData(json)
-    setLoading(false)
+
+    try {
+      const json = await fetchIp()
+      setData(json)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
-    load()
+    let active = true
+
+    const loadInitialData = async () => {
+      try {
+        const json = await fetchIp()
+        if (!active) return
+        setData(json)
+      } finally {
+        if (!active) return
+        setLoading(false)
+      }
+    }
+
+    void loadInitialData()
+
+    return () => {
+      active = false
+    }
   }, [])
 
   return (
